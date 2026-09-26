@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="franchiseApp">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>General Settings - FranchiseEdge Admin</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular-animate.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular-route.min.js"></script>
+    <script src="app-core.js"></script>
+</head>
+<body ng-controller="AdminSettingsController">
+
+<div class="dashboard">
+    <!-- Admin Sidebar Navigation -->
+    <div class="sidebar" id="sidebar">
+        <div class="admin-sidebar-brand">
+            <div class="admin-brand-icon"><i class="fa-solid fa-shield-halved"></i></div>
+            <div>
+                <h2>FranchiseEdge</h2>
+                <span class="admin-badge-pill">PLATFORM ADMIN</span>
+            </div>
+        </div>
+        <nav class="admin-nav-menu">
+            <a href="admin-dashboard.html"><i class="fa-solid fa-chart-pie"></i> Dashboard</a>
+            <a href="admin-companies.html"><i class="fa-solid fa-list-check"></i> Company Requests</a>
+            <a href="admin-companies.html?status=APPROVED"><i class="fa-solid fa-circle-check"></i> Approved Companies</a>
+            <a href="admin-companies.html?status=REJECTED"><i class="fa-solid fa-circle-xmark"></i> Rejected Companies</a>
+            <a href="admin-companies.html?status=PENDING"><i class="fa-solid fa-clock"></i> Pending Companies</a>
+            <a href="admin-settings.html" class="active"><i class="fa-solid fa-gear"></i> General Settings</a>
+            <a href="javascript:void(0)" ng-click="logout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+        </nav>
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+        <div class="topbar">
+            <div>
+                <button class="mobile-menu-toggle" id="menuToggle"><i class="fa-solid fa-bars"></i></button>
+                <h1 style="display:inline-block;vertical-align:middle;margin:0;">Platform General Settings</h1>
+                <p style="margin:4px 0 0;color:var(--muted);font-size:0.85rem;">Central system parameters, administrator credentials, and database health.</p>
+            </div>
+            <div class="topbar-right">
+                <div class="admin-user-tag">
+                    <i class="fa-solid fa-shield-halved" style="color:var(--medium-blue);"></i>
+                    <span>{{ admin.email || 'admin@example.com' }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="feedback-banner success" ng-if="message">
+            <i class="fa-solid fa-circle-check"></i> {{ message }}
+        </div>
+        <div class="feedback-banner error" ng-if="error">
+            <i class="fa-solid fa-circle-exclamation"></i> {{ error }}
+        </div>
+
+        <div class="split-layout">
+            <!-- Left: Admin Profile & Credentials -->
+            <div class="card-panel">
+                <div class="panel-header">
+                    <h3 class="panel-title"><i class="fa-solid fa-user-shield"></i> Administrator Profile</h3>
+                </div>
+                <div class="info-kv-table">
+                    <div class="kv-row">
+                        <span class="kv-key">Role</span>
+                        <span class="kv-val"><span class="badge badge-warning"><i class="fa-solid fa-shield-halved"></i> FranchiseEdge Super Administrator</span></span>
+                    </div>
+                    <div class="kv-row">
+                        <span class="kv-key">Account Name</span>
+                        <span class="kv-val"><strong>{{ admin.name || 'System Administrator' }}</strong></span>
+                    </div>
+                    <div class="kv-row">
+                        <span class="kv-key">Email Address</span>
+                        <span class="kv-val">{{ admin.email || 'admin@example.com' }}</span>
+                    </div>
+                    <div class="kv-row">
+                        <span class="kv-key">Security Protocol</span>
+                        <span class="kv-val">scrypt salted password hashing with HttpOnly session cookies</span>
+                    </div>
+                </div>
+
+                <h4 style="margin:24px 0 12px;color:var(--dark);"><i class="fa-solid fa-key"></i> Update Admin Password</h4>
+                <form ng-submit="changePassword()">
+                    <div class="form-group" style="margin-bottom:12px;">
+                        <label>Current Password</label>
+                        <input type="password" ng-model="passwordForm.currentPassword" required placeholder="Enter current admin password">
+                    </div>
+                    <div class="form-group" style="margin-bottom:12px;">
+                        <label>New Password</label>
+                        <input type="password" ng-model="passwordForm.newPassword" required minlength="6" placeholder="Enter new secure password (min 6 chars)">
+                    </div>
+                    <div class="form-group" style="margin-bottom:16px;">
+                        <label>Confirm New Password</label>
+                        <input type="password" ng-model="passwordForm.confirmPassword" required placeholder="Confirm new password">
+                    </div>
+                    <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Update Credentials</button>
+                </form>
+            </div>
+
+            <!-- Right: Platform Architecture & Infrastructure -->
+            <div class="card-panel">
+                <div class="panel-header">
+                    <h3 class="panel-title"><i class="fa-solid fa-server"></i> Platform Infrastructure</h3>
+                </div>
+                <div class="info-kv-table">
+                    <div class="kv-row">
+                        <span class="kv-key">Central Database</span>
+                        <span class="kv-val"><code>{{ system.database || 'franchise_control' }}</code></span>
+                    </div>
+                    <div class="kv-row">
+                        <span class="kv-key">Multi-Tenant Architecture</span>
+                        <span class="kv-val">Separate MongoDB tenant DB per approved company (<code>company_{id}</code>)</span>
+                    </div>
+                    <div class="kv-row">
+                        <span class="kv-key">Data Isolation Status</span>
+                        <span class="kv-val" style="color:var(--success);font-weight:600;"><i class="fa-solid fa-lock"></i> Strict Logical Isolation Active</span>
+                    </div>
+                    <div class="kv-row">
+                        <span class="kv-key">Node.js Engine</span>
+                        <span class="kv-val">{{ system.nodeVersion || 'v24.x' }}</span>
+                    </div>
+                    <div class="kv-row">
+                        <span class="kv-key">Server Platform</span>
+                        <span class="kv-val">{{ system.platform || 'win32' }}</span>
+                    </div>
+                    <div class="kv-row">
+                        <span class="kv-key">Total Registered Tenants</span>
+                        <span class="kv-val"><strong>{{ system.totalCompanies || 0 }} Companies</strong></span>
+                    </div>
+                </div>
+
+                <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:16px;margin-top:24px;font-size:0.88rem;color:#1e3a8a;">
+                    <div style="font-weight:700;margin-bottom:6px;"><i class="fa-solid fa-circle-info"></i> Franchise Edge Administration Guidelines:</div>
+                    <ul style="margin:0;padding-left:18px;line-height:1.6;">
+                        <li>Approving a company automatically provisions its dedicated tenant database and creates required indexes.</li>
+                        <li>Rejecting a company suspends their access and invalidates active session tokens.</li>
+                        <li>Companies manage their own Main Franchise, Central Inventory, and Branch-to-Branch stock transfers independently.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="sidebar.js"></script>
+</body>
+</html>

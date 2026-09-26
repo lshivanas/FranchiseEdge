@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="franchiseApp">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Franchise Network Management - FranchiseEdge</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular-animate.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular-route.min.js"></script>
+    <script src="app-core.js"></script>
+</head>
+<body ng-controller="FranchiseController">
+
+<app-loading loading="isLoading"></app-loading>
+
+<div class="dashboard">
+    <!-- Company Sidebar Navigation (Clean: No Compliance, Smart Tips, or Analytics) -->
+    <div class="sidebar" id="sidebar">
+        <div class="company-sidebar-brand">
+            <div class="company-logo-slot">
+                <img ng-if="currentUser.logoUrl" ng-src="{{currentUser.logoUrl}}" alt="{{currentUser.company}}" class="company-logo-img">
+                <div ng-if="!currentUser.logoUrl" class="company-logo-placeholder">
+                    <span>[ {{ (currentUser.company || 'C').charAt(0).toUpperCase() }} ]</span>
+                </div>
+            </div>
+            <div class="company-brand-text">
+                <h2>{{ currentUser.company || 'FranchiseEdge' }}</h2>
+                <small style="color:var(--muted);font-size:0.75rem;">Company Portal</small>
+            </div>
+        </div>
+
+        <nav class="company-nav-menu">
+            <a href="dashboard.html"><i class="fa-solid fa-chart-pie"></i> Dashboard</a>
+            <a href="franchises.html" class="active"><i class="fa-solid fa-store"></i> Franchises</a>
+            <a href="inventory.html"><i class="fa-solid fa-boxes-stacked"></i> Inventory</a>
+            <a href="orders.html"><i class="fa-solid fa-cart-shopping"></i> Orders & Transfers</a>
+            <a href="settings.html"><i class="fa-solid fa-gear"></i> Settings</a>
+            <a href="javascript:void(0)" ng-click="logout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+        </nav>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="main-content">
+        <div class="topbar">
+            <div>
+                <button class="mobile-menu-toggle" id="menuToggle"><i class="fa-solid fa-bars"></i></button>
+                <h1 style="display:inline-block;vertical-align:middle;margin:0;">Franchise Network Management</h1>
+                <p style="margin:4px 0 0;color:var(--muted);font-size:0.85rem;">One Central Main Franchise and multiple connected franchise branches.</p>
+            </div>
+            <div class="topbar-right">
+                <button type="button" class="btn btn-primary" ng-click="openAddModal()"><i class="fa-solid fa-plus"></i> Register New Branch</button>
+            </div>
+        </div>
+
+        <!-- KPI Summary Cards -->
+        <div class="stats">
+            <div class="stat-card">
+                <h3>Total Network Units</h3>
+                <h2>{{ franchises.length }}</h2>
+                <small style="color:var(--muted);"><i class="fa-solid fa-store"></i> All registered locations</small>
+            </div>
+            <div class="stat-card">
+                <h3>Active Branches</h3>
+                <h2 style="color:var(--success);">{{ activeCount }}</h2>
+                <small style="color:var(--success);font-weight:600;"><i class="fa-solid fa-circle-check"></i> Operational</small>
+            </div>
+            <div class="stat-card">
+                <h3>Main Franchise (HQ)</h3>
+                <h2 style="color:var(--medium-blue);">1</h2>
+                <small style="color:var(--medium-blue);font-weight:600;"><i class="fa-solid fa-crown"></i> Central headquarters</small>
+            </div>
+            <div class="stat-card">
+                <h3>Network Revenue</h3>
+                <h2 style="color:var(--success);">{{ totalRevenue | currencyInr }}</h2>
+                <small style="color:var(--success);font-weight:600;"><i class="fa-solid fa-chart-line"></i> Total branch sales</small>
+            </div>
+        </div>
+
+        <!-- Filter Controls Bar & View Toggle -->
+        <div class="admin-controls-card">
+            <div class="admin-search-box" style="flex:1;max-width:400px;">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" ng-model="searchText" placeholder="Filter by branch name, code, owner, city...">
+            </div>
+
+            <div style="display:flex;gap:12px;align-items:center;">
+                <select ng-model="statusFilter" style="padding:8px 12px;border-radius:6px;border:1px solid #cbd5e1;font-weight:600;font-size:0.85rem;">
+                    <option value="">All Statuses</option>
+                    <option value="ACTIVE">Active</option>
+                    <option value="PENDING">Pending</option>
+                    <option value="INACTIVE">Inactive</option>
+                </select>
+
+                <div class="view-toggle-group">
+                    <button type="button" class="view-toggle-btn" ng-class="{'active': viewMode === 'cards'}" ng-click="viewMode = 'cards'" title="Card View">
+                        <i class="fa-solid fa-grip"></i> Cards
+                    </button>
+                    <button type="button" class="view-toggle-btn" ng-class="{'active': viewMode === 'table'}" ng-click="viewMode = 'table'" title="Table View">
+                        <i class="fa-solid fa-list"></i> Table
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mode 1: Franchise Cards View -->
+        <div class="franchise-cards-grid" ng-if="viewMode === 'cards'">
+            <div class="franchise-card-box" ng-repeat="f in filteredFranchises = (franchises | filter:searchText | filter:{status:statusFilter})" ng-class="{'main-hq-card': f.isHeadOffice}">
+                <div class="franchise-card-header">
+                    <div>
+                        <span class="sku-text">{{ f.franchise_code }}</span>
+                        <h3 class="franchise-name-heading">{{ f.name }}</h3>
+                        <div class="franchise-location-sub"><i class="fa-solid fa-location-dot"></i> {{ f.city }}<span ng-if="f.state">, {{ f.state }}</span></div>
+                    </div>
+                    <div style="text-align:right;">
+                        <span class="status-pill" ng-class="{'pill-approved': f.status==='ACTIVE', 'pill-pending': f.status==='PENDING', 'pill-rejected': f.status==='INACTIVE'}">
+                            {{ f.status }}
+                        </span>
+                        <div style="margin-top:6px;" ng-if="f.isHeadOffice">
+                            <span class="badge badge-warning"><i class="fa-solid fa-crown"></i> Main Franchise (Central HQ)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="franchise-card-body">
+                    <div class="franchise-meta-grid">
+                        <div class="f-meta-item">
+                            <span class="f-label"><i class="fa-regular fa-user"></i> Manager / Owner</span>
+                            <strong>{{ f.owner_name }}</strong>
+                        </div>
+                        <div class="f-meta-item">
+                            <span class="f-label"><i class="fa-solid fa-indian-rupee-sign"></i> Branch Revenue</span>
+                            <strong style="color:var(--success);">{{ (f.total_revenue || 0) | currencyInr }}</strong>
+                        </div>
+                    </div>
+
+                    <div class="f-contact-strip">
+                        <div ng-if="f.phone"><i class="fa-solid fa-phone"></i> {{ f.phone }}</div>
+                        <div ng-if="f.email"><i class="fa-regular fa-envelope"></i> {{ f.email }}</div>
+                    </div>
+                </div>
+
+                <div class="franchise-card-footer">
+                    <button class="btn btn-secondary btn-sm" ng-click="viewFranchise(f)">
+                        <i class="fa-solid fa-eye"></i> View Profile
+                    </button>
+                    <div style="display:flex;gap:6px;">
+                        <button class="action-btn edit-btn" ng-click="editFranchise(f)" title="Edit Branch"><i class="fa-solid fa-pen"></i></button>
+                        <button class="action-btn delete-btn" ng-click="deleteFranchise(f)" title="Deactivate Branch"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="empty-state-box full-width" ng-if="filteredFranchises.length === 0">
+                <i class="fa-solid fa-store-slash" style="font-size:2.5rem;color:var(--muted);"></i>
+                <h3>No franchises found</h3>
+                <p>No branches match your current search or status filter.</p>
+            </div>
+        </div>
+
+        <!-- Mode 2: Enhanced Tabular View -->
+        <div class="table-container" ng-if="viewMode === 'table'">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Code</th>
+                        <th>Branch Name</th>
+                        <th>Hierarchy / Role</th>
+                        <th>City / State</th>
+                        <th>Manager / Contact</th>
+                        <th>Total Revenue</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr ng-repeat="f in filteredFranchises = (franchises | filter:searchText | filter:{status:statusFilter})" franchise-highlight>
+                        <td class="sku-text">{{ f.franchise_code }}</td>
+                        <td><strong>{{ f.name }}</strong></td>
+                        <td>
+                            <span class="badge badge-warning" ng-if="f.isHeadOffice"><i class="fa-solid fa-crown"></i> Main Franchise (Central HQ)</span>
+                            <span class="badge badge-info" ng-if="!f.isHeadOffice"><i class="fa-solid fa-store"></i> Branch Unit</span>
+                        </td>
+                        <td>{{ f.city }}<span ng-if="f.state">, {{ f.state }}</span></td>
+                        <td>
+                            <strong>{{ f.owner_name }}</strong><br>
+                            <small style="color:var(--muted);">{{ f.phone }} &bull; {{ f.email }}</small>
+                        </td>
+                        <td style="color:var(--success);font-weight:600;">{{ (f.total_revenue || 0) | currencyInr }}</td>
+                        <td><franchise-status status="{{ f.status }}"></franchise-status></td>
+                        <td>
+                            <button class="action-btn view-btn" ng-click="viewFranchise(f)" title="View Details"><i class="fa-solid fa-eye"></i></button>
+                            <button class="action-btn edit-btn" ng-click="editFranchise(f)" title="Edit"><i class="fa-solid fa-pen"></i></button>
+                            <button class="action-btn delete-btn" ng-click="deleteFranchise(f)" title="Deactivate/Delete"><i class="fa-solid fa-trash"></i></button>
+                        </td>
+                    </tr>
+                    <tr ng-if="filteredFranchises.length === 0">
+                        <td colspan="8" style="text-align:center;padding:30px;">No franchises found matching criteria.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Add / Edit Modal -->
+<div class="modal" ng-if="showModal">
+    <div class="modal-box">
+        <h2>{{ modalTitle }}</h2>
+        <form ng-submit="saveFranchise()">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Franchise Code</label>
+                    <input type="text" ng-model="formData.franchise_code" placeholder="e.g. FRAN-0007 (leave blank for auto)">
+                </div>
+                <div class="form-group">
+                    <label>Status</label>
+                    <select ng-model="formData.status" required>
+                        <option value="ACTIVE">Active</option>
+                        <option value="PENDING">Pending</option>
+                        <option value="INACTIVE">Inactive</option>
+                    </select>
+                </div>
+                <div class="form-group full">
+                    <label>Franchise Branch Name</label>
+                    <input type="text" ng-model="formData.name" required placeholder="e.g. Apex Hub Pune Hinjewadi">
+                </div>
+                <div class="form-group">
+                    <label>Owner / Manager Name</label>
+                    <input type="text" ng-model="formData.owner_name" required placeholder="e.g. Sanjay Verma">
+                </div>
+                <div class="form-group">
+                    <label>Mobile Number</label>
+                    <phone-input ng-model="formData.phone" ph-error="franchisePhoneError"></phone-input>
+                    <span class="error-text" ng-if="franchisePhoneError">{{ franchisePhoneError }}</span>
+                </div>
+                <div class="form-group">
+                    <label>Corporate Email</label>
+                    <input type="email" ng-model="formData.email" placeholder="manager@apexfranchise.in">
+                </div>
+                <div class="form-group">
+                    <label>City</label>
+                    <input type="text" ng-model="formData.city" placeholder="Pune">
+                </div>
+                <div class="form-group">
+                    <label>State</label>
+                    <input type="text" ng-model="formData.state" placeholder="Maharashtra">
+                </div>
+                <div class="form-group full">
+                    <label>Street Address</label>
+                    <input type="text" ng-model="formData.address" placeholder="Commercial Complex, Phase 1">
+                </div>
+            </div>
+            <div class="modal-buttons">
+                <button type="button" class="btn cancel-btn" ng-click="closeModal()">Cancel</button>
+                <button type="submit" class="btn"><i class="fa-solid fa-floppy-disk"></i> {{ editMode ? 'Save Changes' : 'Create Franchise' }}</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- View Details Modal -->
+<div class="modal" ng-if="showViewModal">
+    <div class="modal-box" style="max-width:700px;">
+        <h2>Branch Profile: {{ selectedFranchise.name }}</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;font-size:0.9rem;">
+            <p><strong>Code:</strong> {{ selectedFranchise.franchise_code }}</p>
+            <p><strong>Status:</strong> <franchise-status status="{{ selectedFranchise.status }}"></franchise-status></p>
+            <p><strong>Owner:</strong> {{ selectedFranchise.owner_name }}</p>
+            <p><strong>City / State:</strong> {{ selectedFranchise.city }}, {{ selectedFranchise.state }}</p>
+            <p><strong>Email:</strong> {{ selectedFranchise.email || 'N/A' }}</p>
+            <p><strong>Phone:</strong> {{ selectedFranchise.phone || 'N/A' }}</p>
+        </div>
+
+        <h3 style="color:var(--blue);margin-bottom:10px;"><i class="fa-solid fa-boxes-stacked"></i> Branch Stock Overview</h3>
+        <table class="data-table" style="font-size:0.85rem;" ng-if="selectedFranchise.inventory && selectedFranchise.inventory.length > 0">
+            <thead>
+                <tr><th>SKU</th><th>Product</th><th>Category</th><th>Stock</th></tr>
+            </thead>
+            <tbody>
+                <tr ng-repeat="inv in selectedFranchise.inventory">
+                    <td><span class="sku-text">{{ inv.product_code }}</span></td>
+                    <td><strong>{{ inv.product_name }}</strong></td>
+                    <td>{{ inv.category }}</td>
+                    <td><strong>{{ inv.quantity }} units</strong></td>
+                </tr>
+            </tbody>
+        </table>
+        <div ng-if="!selectedFranchise.inventory || selectedFranchise.inventory.length === 0" style="padding:15px;color:var(--muted);text-align:center;">
+            No inventory allocated yet.
+        </div>
+
+        <div class="modal-buttons" style="margin-top:20px;">
+            <button type="button" class="btn cancel-btn" ng-click="closeViewModal()">Close</button>
+        </div>
+    </div>
+</div>
+
+<script src="sidebar.js"></script>
+</body>
+</html>

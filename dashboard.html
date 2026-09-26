@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="franchiseApp">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Command Center - FranchiseEdge</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular-animate.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular-route.min.js"></script>
+    <script src="app-core.js"></script>
+</head>
+<body ng-controller="DashboardController">
+
+<app-loading loading="isLoading"></app-loading>
+
+<div class="dashboard">
+    <div class="sidebar" id="sidebar">
+        <div class="company-sidebar-brand">
+            <div class="company-logo-slot">
+                <img ng-if="currentUser.logoUrl" ng-src="{{currentUser.logoUrl}}" alt="{{currentUser.company}}" class="company-logo-img">
+                <div ng-if="!currentUser.logoUrl" class="company-logo-placeholder">
+                    <span>[ {{ (currentUser.company || 'C').charAt(0).toUpperCase() }} ]</span>
+                </div>
+            </div>
+            <div class="company-brand-text">
+                <h2>{{ currentUser.company || 'FranchiseEdge' }}</h2>
+                <small style="color:var(--muted);font-size:0.75rem;">Company Portal</small>
+            </div>
+        </div>
+
+        <nav class="company-nav-menu">
+            <a href="dashboard.html" class="active"><i class="fa-solid fa-chart-pie"></i> Dashboard</a>
+            <a href="franchises.html"><i class="fa-solid fa-store"></i> Franchises</a>
+            <a href="inventory.html"><i class="fa-solid fa-boxes-stacked"></i> Inventory</a>
+            <a href="orders.html"><i class="fa-solid fa-cart-shopping"></i> Orders & Transfers</a>
+            <a href="settings.html"><i class="fa-solid fa-gear"></i> Settings</a>
+            <a href="javascript:void(0)" ng-click="logout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+        </nav>
+    </div>
+
+    <div class="main-content">
+        <div class="topbar">
+            <h1><button class="mobile-menu-toggle" id="menuToggle"><i class="fa-solid fa-bars"></i></button> Executive Dashboard</h1>
+            <div class="topbar-right">
+                <div class="profile-card">
+                    <div class="profile-avatar" style="overflow:hidden;">
+                        <img ng-if="currentUser.logoUrl" ng-src="{{currentUser.logoUrl}}" alt="Logo" style="width:100%;height:100%;object-fit:cover;">
+                        <span ng-if="!currentUser.logoUrl">{{ (currentUser.company || currentUser.name || 'C').charAt(0).toUpperCase() }}</span>
+                    </div>
+                    <div>
+                        <strong style="font-size:0.85rem;">{{ currentUser.name || 'Enterprise Admin' }}</strong><br>
+                        <small style="color:var(--muted);font-size:0.75rem;">{{ currentUser.company || 'Company HQ' }}</small>
+                    </div>
+                </div>
+                <input type="text" ng-model="searchText" placeholder="Search Franchise / City...">
+                <div class="date-time">
+                    <div><strong>Date:</strong> {{ currentDate | date:'dd/MM/yyyy' }}</div>
+                    <div><strong>Time:</strong> {{ currentDate | date:'hh:mm:ss a' }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- KPI Summary Cards connected to GET /api/dashboard -->
+        <div class="stats">
+            <div class="stat-card">
+                <h3>Active / Total Franchises</h3>
+                <h2>{{ stats.activeFranchises || 0 }} <span style="font-size:1rem;color:var(--muted);font-weight:normal;">/ {{ stats.totalFranchises || 0 }}</span></h2>
+            </div>
+            <div class="stat-card">
+                <h3>Total / Low Stock Products</h3>
+                <h2>{{ stats.totalProducts || 0 }} <span style="font-size:1rem;color:var(--danger);font-weight:normal;" ng-if="stats.lowStockProducts > 0">({{ stats.lowStockProducts }} Low)</span></h2>
+            </div>
+            <div class="stat-card">
+                <h3>Orders & Transfers</h3>
+                <h2>{{ stats.pendingOrders || 0 }} <span style="font-size:1rem;color:var(--muted);font-weight:normal;">Pending / {{ stats.totalOrders || 0 }} Total</span></h2>
+            </div>
+            <div class="stat-card">
+                <h3>Total Network Sales</h3>
+                <h2 style="color:var(--success);">{{ stats.totalSales | currencyInr }}</h2>
+            </div>
+        </div>
+
+        <div class="split-layout">
+            <!-- Stock Health Panel -->
+            <div class="card-panel">
+                <div class="panel-header">
+                    <h2 class="panel-title"><i class="fa-solid fa-shield-halved"></i> Stock Health</h2>
+                    <a href="inventory.html" class="btn btn-secondary btn-sm">Full Inventory</a>
+                </div>
+                <div ng-if="stockHealthSummary.total" style="display:flex;align-items:center;gap:24px;padding:16px 6px 8px;">
+                    <div ng-style="stockHealthPieStyle" style="width:138px;height:138px;border-radius:50%;position:relative;flex:none;">
+                        <div style="position:absolute;inset:25px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-direction:column;">
+                            <strong style="font-size:1.45rem;color:var(--dark);">{{stockHealthSummary.healthyPercent}}%</strong>
+                            <small style="color:var(--muted);">Healthy</small>
+                        </div>
+                    </div>
+                    <div style="display:flex;flex-direction:column;gap:12px;font-size:.92rem;">
+                        <div><span style="display:inline-block;width:11px;height:11px;border-radius:50%;background:#16a34a;margin-right:8px;"></span><strong>Healthy:</strong> {{stockHealthSummary.healthy}} ({{stockHealthSummary.healthyPercent}}%)</div>
+                        <div><span style="display:inline-block;width:11px;height:11px;border-radius:50%;background:#dc2626;margin-right:8px;"></span><strong>Low stock:</strong> {{stockHealthSummary.low}} ({{stockHealthSummary.lowPercent}}%)</div>
+                        <small style="color:var(--muted);">{{stockHealthSummary.total}} branch inventory records checked</small>
+                    </div>
+                </div>
+                <div ng-if="!stockHealthSummary.total" style="color:var(--muted);padding:25px 8px;text-align:center;">No active inventory records are available yet.</div>
+            </div>
+
+            <!-- Recent Orders / Transfers Feed with Source & Destination Indicator -->
+            <div class="card-panel">
+                <div class="panel-header">
+                    <h2 class="panel-title"><i class="fa-regular fa-clock"></i> Recent Stock Movements</h2>
+                    <a href="orders.html" class="btn btn-secondary btn-sm">All Transfers</a>
+                </div>
+                <div class="activity-feed">
+                    <div class="activity-item" ng-repeat="ord in recentOrders">
+                        <div class="activity-icon-wrapper order">
+                            <i class="fa-solid fa-arrows-split-up-and-left"></i>
+                        </div>
+                        <div style="width:100%;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;">
+                                <span class="activity-text"><strong>{{ ord.order_number }}</strong> ({{ ord.total | currencyInr }})</span>
+                                <span class="badge" ng-class="{'badge-warning': ord.status==='PENDING', 'badge-info': ord.status==='IN TRANSIT', 'badge-success': ord.status==='COMPLETED'||ord.status==='DELIVERED'}">{{ ord.status }}</span>
+                            </div>
+                            <div class="dashboard-transfer-route" style="font-size:0.8rem;margin:4px 0;">
+                                <span style="color:var(--blue);font-weight:600;"><i class="fa-solid fa-building-columns"></i> {{ ord.source_name || 'Main Inventory' }}</span>
+                                <i class="fa-solid fa-arrow-right" style="color:var(--muted);margin:0 4px;"></i>
+                                <span style="color:var(--dark);font-weight:600;"><i class="fa-solid fa-store"></i> {{ ord.destination_name || ord.franchise_name }}</span>
+                            </div>
+                            <time class="activity-time">{{ ord.order_date | date:'dd/MM/yyyy hh:mm a' }}</time>
+                        </div>
+                    </div>
+                    <div ng-if="recentOrders.length === 0" style="color:var(--muted);padding:15px;text-align:center;">
+                        No recent stock transfers found.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Franchises Table with Main HQ Crown Highlight -->
+        <div class="table-container">
+            <div class="panel-header">
+                <h2 style="color:var(--blue);margin:0;"><i class="fa-solid fa-store"></i> Franchise Network Units</h2>
+                <a href="franchises.html" class="btn btn-primary btn-sm"><i class="fa-solid fa-plus"></i> Manage Franchises</a>
+            </div>
+            <table>
+                <thead>
+                    <tr><th>Code</th><th>Branch Name</th><th>Role / Hierarchy</th><th>City</th><th>Owner / Manager</th><th>Total Sales</th><th>Status</th></tr>
+                </thead>
+                <tbody>
+                    <tr ng-repeat="f in franchises | filter:searchText" franchise-highlight>
+                        <td><strong class="sku-text">{{ f.franchise_code }}</strong></td>
+                        <td><strong>{{ f.name }}</strong></td>
+                        <td>
+                            <span class="badge badge-warning" ng-if="f.isHeadOffice"><i class="fa-solid fa-crown"></i> Main Franchise (Central HQ)</span>
+                            <span class="badge badge-info" ng-if="!f.isHeadOffice"><i class="fa-solid fa-store"></i> Branch Unit</span>
+                        </td>
+                        <td>{{ f.city }}</td>
+                        <td>{{ f.owner_name }}</td>
+                        <td style="color:var(--success);font-weight:600;">{{ f.total_revenue | currencyInr }}</td>
+                        <td><franchise-status status="{{ f.status }}"></franchise-status></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script src="sidebar.js"></script>
+</body>
+</html>

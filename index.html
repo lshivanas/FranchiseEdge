@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="FranchiseEdge - Smart Franchise Management Platform">
+    <title>FranchiseEdge - Smart Franchise Management</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+
+    <header class="landing-header">
+        <div class="container navbar">
+            <div class="logo">FranchiseEdge</div>
+            <nav class="nav-links">
+                <a href="#">Home</a>
+                <a href="#features">Features</a>
+                <a href="#stats">Impact</a>
+                <a href="login.html">Sign In</a>
+                <a href="register.html" class="btn btn-primary">Get Started</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="hero">
+            <div class="container hero-content">
+                <div>
+                    <div class="trusted-badge">TRUSTED BY 500+ GLOBAL BRANDS</div>
+                    <h1>Manage Your <span>Franchise Smarter</span></h1>
+                    <p>The enterprise-grade command center for multi-unit operators. Streamline inventory, track performance in real-time, and scale with automated multi-branch operations.</p>
+                    <div class="hero-buttons">
+                        <a href="login.html" class="btn btn-primary">Sign In to Dashboard</a>
+                        <a href="register.html" class="btn btn-secondary">Request Access</a>
+                    </div>
+                </div>
+                <div class="hero-image">
+                    <img src="https://www.sensire.com/hubfs/man%20choose%20wood%20blog%20with%20franchise%20marketing%20system%20in%20global%20network%20connection.jpg" alt="Franchise Network">
+                    <div class="floating-card">
+                        <p>REVENUE GROWTH</p>
+                        <h3>+24.8%</h3>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Video Placeholder Section -->
+        <section class="video-preview-section" id="overview-tour">
+            <div class="container">
+                <div class="section-title">
+                    <div class="video-section-badge"><i class="fa-solid fa-play"></i> PLATFORM WALKTHROUGH</div>
+                    <h2>See FranchiseEdge in Action</h2>
+                    <p>Discover how centralized inventory routing, franchise-to-franchise stock transfers, and platform administration work seamlessly in real time.</p>
+                </div>
+                <div class="video-player-placeholder">
+                    <div class="video-screen-backdrop">
+                        <div class="video-screen-overlay">
+                            <div class="video-play-button-wrapper" id="videoPlayWrapper" onclick="showVideoModal()">
+                                <div class="play-pulse-ring"></div>
+                                <div class="play-pulse-ring delay"></div>
+                                <button class="video-play-btn" type="button" aria-label="Play Product Tour Video">
+                                    <i class="fa-solid fa-play"></i>
+                                </button>
+                            </div>
+                            <div class="video-duration-tag">
+                                <i class="fa-regular fa-clock"></i> 2:45 Tour
+                            </div>
+                            <div class="video-screen-info">
+                                <span class="video-screen-tag"><i class="fa-solid fa-layer-group"></i> Interactive Demo Preview</span>
+                                <h3>Enterprise Franchise Inventory & Stock Transfer Walkthrough</h3>
+                                <p>Watch how Main Inventory supplies branches and how branches quickly transfer out-of-stock items directly between each other.</p>
+                            </div>
+                        </div>
+                        <div class="video-player-controls">
+                            <div class="controls-left">
+                                <button class="btn-ctrl" type="button" title="Play / Pause"><i class="fa-solid fa-play"></i></button>
+                                <span class="time-display">0:00 / 2:45</span>
+                            </div>
+                            <div class="controls-progress-track">
+                                <div class="progress-bar-active" style="width: 32%;"></div>
+                                <div class="progress-scrubber" style="left: 32%;"></div>
+                            </div>
+                            <div class="controls-right">
+                                <button class="btn-ctrl" type="button" title="Volume"><i class="fa-solid fa-volume-high"></i></button>
+                                <button class="btn-ctrl" type="button" title="Settings"><i class="fa-solid fa-gear"></i></button>
+                                <button class="btn-ctrl" type="button" title="Fullscreen"><i class="fa-solid fa-expand"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="video-feature-highlights">
+                        <div class="highlight-item">
+                            <i class="fa-solid fa-building-columns"></i>
+                            <div>
+                                <strong>Central Main Inventory</strong>
+                                <small>Central stock repository supplying all registered franchise branches</small>
+                            </div>
+                        </div>
+                        <div class="highlight-item">
+                            <i class="fa-solid fa-arrows-split-up-and-left"></i>
+                            <div>
+                                <strong>Franchise-to-Franchise Transfers</strong>
+                                <small>Dynamic cross-branch inventory balancing when central stock is zero</small>
+                            </div>
+                        </div>
+                        <div class="highlight-item">
+                            <i class="fa-solid fa-shield-halved"></i>
+                            <div>
+                                <strong>Platform Admin Governance</strong>
+                                <small>Multi-tenant approval, onboarding, and strict logical isolation</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="features-section" id="features">
+            <div class="container">
+                <div class="section-title">
+                    <h2>Everything your enterprise needs</h2>
+                    <p>Built for precision, designed for speed. Core modules give you total control over every location from a single dashboard.</p>
+                </div>
+                <div class="feature-grid">
+                    <article class="feature-card">
+                        <div class="icon-box"><i class="fa-solid fa-warehouse"></i></div>
+                        <h3>Centralized Main Inventory</h3>
+                        <p>Keep your catalog and primary warehouse stocked, and dispatch to any branch with real-time atomic balance tracking.</p>
+                    </article>
+                    <article class="feature-card">
+                        <div class="icon-box"><i class="fa-solid fa-right-left"></i></div>
+                        <h3>Franchise-to-Franchise Transfers</h3>
+                        <p>When Central Inventory lacks required items, transfer directly between nearby branches with automated stock validation.</p>
+                    </article>
+                    <article class="feature-card">
+                        <div class="icon-box"><i class="fa-solid fa-boxes-stacked"></i></div>
+                        <h3>Order & Source Routing</h3>
+                        <p>Every replenishment order verifies Source and Destination availability to eliminate stock mismatches and manual errors.</p>
+                    </article>
+                    <article class="feature-card">
+                        <div class="icon-box"><i class="fa-solid fa-chart-line"></i></div>
+                        <h3>Real-time Network Tracking</h3>
+                        <p>Track branch health, low-stock warnings, and transaction logs across all active franchises instantly.</p>
+                    </article>
+                    <article class="feature-card">
+                        <div class="icon-box"><i class="fa-solid fa-shield-halved"></i></div>
+                        <h3>Central Admin Governance</h3>
+                        <p>Streamlined review workflow for pending company requests, instant tenant provisioning, and brand setup.</p>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section class="stats-section" id="stats">
+            <div class="container stats-grid">
+                <div class="stat-item"><h2>99.9%</h2><p>UPTIME SLA</p></div>
+                <div class="stat-item"><h2>500+</h2><p>GLOBAL BRANDS</p></div>
+                <div class="stat-item"><h2>40%</h2><p>EFFICIENCY GAIN</p></div>
+                <div class="stat-item"><h2>24/7</h2><p>PRIORITY SUPPORT</p></div>
+            </div>
+        </section>
+
+        <section class="cta-section">
+            <div class="container">
+                <div class="cta-box">
+                    <h2>Ready to scale your franchise empire?</h2>
+                    <p>Sign in to access your centralized franchise command center.</p>
+                    <div class="cta-buttons">
+                        <a href="register.html" class="btn btn-light">Get Started Now</a>
+                        <a href="login.html" class="btn btn-outline-light">Sign In</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="landing-footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>FranchiseEdge</h3>
+                    <p>Enterprise-grade franchise management for modern businesses.</p>
+                </div>
+                <div class="footer-section">
+                    <h3>Quick Access</h3>
+                    <a href="login.html">Sign In</a>
+                    <a href="register.html">Request Account</a>
+                    <a href="admin-login.html">Platform Admin</a>
+                    <a href="#features">Features</a>
+                </div>
+                <div class="footer-section">
+                    <h3>Company</h3>
+                    <a href="#features">About</a>
+                    <a href="#stats">Impact</a>
+                    <a href="mailto:support@franchiseedge.in">Contact Support</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 FranchiseEdge. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Video Demo Modal Placeholder -->
+    <div id="videoModal" class="modal" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,0.85);backdrop-filter:blur(6px);z-index:9999;align-items:center;justify-content:center;">
+        <div style="background:#0f172a;color:#fff;border:1px solid #334155;border-radius:16px;max-width:640px;width:90%;padding:28px;position:relative;box-shadow:0 25px 50px rgba(0,0,0,0.5);">
+            <button onclick="closeVideoModal()" style="position:absolute;top:16px;right:16px;background:none;border:none;color:#94a3b8;font-size:1.4rem;cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+                <div style="width:40px;height:40px;border-radius:10px;background:var(--medium-blue);color:#fff;display:flex;align-items:center;justify-content:center;font-size:1.2rem;"><i class="fa-solid fa-play"></i></div>
+                <div>
+                    <h3 style="margin:0;font-size:1.25rem;">Interactive Tour Preview</h3>
+                    <small style="color:#94a3b8;">FranchiseEdge Architecture & Workflow</small>
+                </div>
+            </div>
+            <div style="background:#1e293b;border-radius:12px;padding:20px;margin-bottom:20px;border:1px dashed #475569;text-align:center;">
+                <i class="fa-solid fa-film" style="font-size:3rem;color:var(--medium-blue);margin-bottom:12px;display:block;"></i>
+                <h4 style="margin-bottom:8px;">FranchiseEdge Architecture Walkthrough</h4>
+                <p style="color:#cbd5e1;font-size:0.9rem;line-height:1.6;margin:0;">
+                    1. <strong>Central Platform Admin</strong> reviews & approves onboarding requests.<br>
+                    2. <strong>Main Inventory (Central HQ)</strong> manages primary stock and supplies branches.<br>
+                    3. <strong>Branch-to-Branch Transfers</strong> enable zero-downtime fulfillment when HQ stock is depleted.
+                </p>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <span style="color:#94a3b8;font-size:0.85rem;"><i class="fa-regular fa-clock"></i> Duration: 2 mins 45 secs</span>
+                <button class="btn btn-primary" onclick="closeVideoModal()">Close Walkthrough</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showVideoModal() {
+            var modal = document.getElementById('videoModal');
+            if (modal) modal.style.display = 'flex';
+        }
+        function closeVideoModal() {
+            var modal = document.getElementById('videoModal');
+            if (modal) modal.style.display = 'none';
+        }
+    </script>
+</body>
+</html>

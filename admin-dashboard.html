@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="franchiseApp">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Command Center - FranchiseEdge</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular-animate.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular-route.min.js"></script>
+    <script src="app-core.js"></script>
+</head>
+<body ng-controller="AdminDashboardController">
+
+<div class="dashboard">
+    <!-- Admin Sidebar Navigation -->
+    <div class="sidebar" id="sidebar">
+        <div class="admin-sidebar-brand">
+            <div class="admin-brand-icon"><i class="fa-solid fa-shield-halved"></i></div>
+            <div>
+                <h2>FranchiseEdge</h2>
+                <span class="admin-badge-pill">PLATFORM ADMIN</span>
+            </div>
+        </div>
+        <nav class="admin-nav-menu">
+            <a href="admin-dashboard.html" class="active"><i class="fa-solid fa-chart-pie"></i> Dashboard</a>
+            <a href="admin-companies.html"><i class="fa-solid fa-list-check"></i> Company Requests</a>
+            <a href="admin-companies.html?status=APPROVED"><i class="fa-solid fa-circle-check"></i> Approved Companies</a>
+            <a href="admin-companies.html?status=REJECTED"><i class="fa-solid fa-circle-xmark"></i> Rejected Companies</a>
+            <a href="admin-companies.html?status=PENDING"><i class="fa-solid fa-clock"></i> Pending Companies</a>
+            <a href="admin-settings.html"><i class="fa-solid fa-gear"></i> General Settings</a>
+            <a href="javascript:void(0)" ng-click="logout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+        </nav>
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+        <div class="topbar">
+            <div>
+                <button class="mobile-menu-toggle" id="menuToggle"><i class="fa-solid fa-bars"></i></button>
+                <h1 style="display:inline-block;vertical-align:middle;margin:0;">Franchise Edge Admin Dashboard</h1>
+                <p style="margin:4px 0 0;color:var(--muted);font-size:0.85rem;">Central management command center for multi-company governance & tenant provisioning.</p>
+            </div>
+            <div class="topbar-right">
+                <div class="admin-user-tag">
+                    <i class="fa-solid fa-shield-halved" style="color:var(--medium-blue);"></i>
+                    <span>System Administrator</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- KPI Summary Cards -->
+        <div class="stats">
+            <div class="stat-card">
+                <h3>Total Registered Companies</h3>
+                <h2>{{ stats.totalCompanies || 0 }}</h2>
+                <small style="color:var(--secondary-text);"><i class="fa-solid fa-building"></i> Platform tenants</small>
+            </div>
+            <div class="stat-card stat-pending-card">
+                <h3>Pending Company Requests</h3>
+                <h2 style="color:var(--warning);">{{ stats.pendingRequests || 0 }}</h2>
+                <small style="color:var(--warning);font-weight:600;"><i class="fa-solid fa-bell"></i> Action required</small>
+            </div>
+            <div class="stat-card stat-approved-card">
+                <h3>Approved Companies</h3>
+                <h2 style="color:var(--success);">{{ stats.approvedCompanies || 0 }}</h2>
+                <small style="color:var(--success);font-weight:600;"><i class="fa-solid fa-circle-check"></i> Active on platform</small>
+            </div>
+            <div class="stat-card">
+                <h3>Total Network Franchises</h3>
+                <h2>{{ stats.totalFranchises || 0 }}</h2>
+                <small style="color:var(--secondary-text);"><i class="fa-solid fa-store"></i> Across all companies</small>
+            </div>
+        </div>
+
+        <!-- Workflow Visual Guide -->
+        <div class="workflow-guide-panel">
+            <div class="guide-title">
+                <i class="fa-solid fa-diagram-project"></i> Company Access & Onboarding Lifecycle
+            </div>
+            <div class="workflow-steps-track">
+                <div class="flow-step">
+                    <div class="step-num">1</div>
+                    <div class="step-label">Company Submits Request</div>
+                </div>
+                <div class="flow-connector"><i class="fa-solid fa-chevron-right"></i></div>
+                <div class="flow-step">
+                    <div class="step-num">2</div>
+                    <div class="step-label">Admin Reviews Company</div>
+                </div>
+                <div class="flow-connector"><i class="fa-solid fa-chevron-right"></i></div>
+                <div class="flow-step highlight">
+                    <div class="step-num"><i class="fa-solid fa-check"></i></div>
+                    <div class="step-label">Approve / Provision Database</div>
+                </div>
+                <div class="flow-connector"><i class="fa-solid fa-chevron-right"></i></div>
+                <div class="flow-step">
+                    <div class="step-num">4</div>
+                    <div class="step-label">Company Onboarding & Branding</div>
+                </div>
+                <div class="flow-connector"><i class="fa-solid fa-chevron-right"></i></div>
+                <div class="flow-step">
+                    <div class="step-num">5</div>
+                    <div class="step-label">Main & Branch Inventory Active</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending Company Requests (2 Cards Per Row) -->
+        <div class="admin-section-block">
+            <div class="section-header-row">
+                <h2><i class="fa-solid fa-clock" style="color:var(--warning);"></i> Pending Access Requests ({{ pendingList.length }})</h2>
+                <a href="admin-companies.html?status=PENDING" class="btn btn-secondary btn-sm">View All Pending</a>
+            </div>
+
+            <div class="company-card-grid" ng-if="pendingList.length > 0">
+                <div class="company-card" ng-repeat="company in pendingList">
+                    <div class="company-card-header">
+                        <div class="company-logo-slot">
+                            <img ng-if="company.logoUrl" ng-src="{{company.logoUrl}}" alt="{{company.companyName}}" class="company-logo-img">
+                            <div ng-if="!company.logoUrl" class="company-logo-placeholder">
+                                <span>[ {{ (company.companyName || 'C').charAt(0).toUpperCase() }} ]</span>
+                            </div>
+                        </div>
+                        <div class="company-header-meta">
+                            <h3 class="company-title">{{ company.companyName }}</h3>
+                            <div class="company-brand-label placeholder-brand">
+                                <i class="fa-regular fa-clock"></i> Awaiting Admin Decision
+                            </div>
+                        </div>
+                        <div class="company-card-status">
+                            <span class="status-pill pill-pending"><i class="fa-solid fa-clock"></i> PENDING</span>
+                        </div>
+                    </div>
+
+                    <div class="company-card-body">
+                        <div class="company-contact-list">
+                            <div class="contact-item">
+                                <i class="fa-regular fa-user"></i>
+                                <span><strong>Contact:</strong> {{ company.contactPerson }}</span>
+                            </div>
+                            <div class="contact-item">
+                                <i class="fa-regular fa-envelope"></i>
+                                <span><strong>Email:</strong> {{ company.email }}</span>
+                            </div>
+                            <div class="contact-item" ng-if="company.phone">
+                                <i class="fa-solid fa-phone"></i>
+                                <span><strong>Phone:</strong> {{ company.phone }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="company-card-footer">
+                        <a class="btn btn-secondary btn-sm" href="admin-company.html?id={{company.id}}">
+                            <i class="fa-solid fa-eye"></i> View Request
+                        </a>
+                        <div class="approval-btn-group">
+                            <button type="button" class="btn btn-sm btn-approve" ng-click="approveCompany(company.id)">
+                                <i class="fa-solid fa-check"></i> Approve
+                            </button>
+                            <button type="button" class="btn btn-sm btn-reject" ng-click="openRejectModal(company)">
+                                <i class="fa-solid fa-xmark"></i> Reject
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="empty-state-box" ng-if="pendingList.length === 0">
+                <i class="fa-solid fa-circle-check" style="color:var(--success);font-size:2.5rem;"></i>
+                <h3>No pending company requests</h3>
+                <p>All submitted registration requests have been reviewed.</p>
+            </div>
+        </div>
+
+        <!-- Approved Companies Overview (2 Cards Per Row) -->
+        <div class="admin-section-block" style="margin-top:35px;">
+            <div class="section-header-row">
+                <h2><i class="fa-solid fa-circle-check" style="color:var(--success);"></i> Approved Companies ({{ approvedList.length }})</h2>
+                <a href="admin-companies.html?status=APPROVED" class="btn btn-secondary btn-sm">View All Approved</a>
+            </div>
+
+            <div class="company-card-grid" ng-if="approvedList.length > 0">
+                <div class="company-card" ng-repeat="company in approvedList | limitTo:4">
+                    <div class="company-card-header">
+                        <div class="company-logo-slot">
+                            <img ng-if="company.logoUrl" ng-src="{{company.logoUrl}}" alt="{{company.companyName}}" class="company-logo-img">
+                            <div ng-if="!company.logoUrl" class="company-logo-placeholder">
+                                <span>[ {{ (company.companyName || 'C').charAt(0).toUpperCase() }} ]</span>
+                            </div>
+                        </div>
+                        <div class="company-header-meta">
+                            <h3 class="company-title">{{ company.companyName }}</h3>
+                            <div class="company-brand-label" ng-if="company.brandName">
+                                <i class="fa-solid fa-tag"></i> {{ company.brandName }}
+                            </div>
+                            <div class="company-brand-label placeholder-brand" ng-if="!company.brandName">
+                                <small>Onboarding in progress</small>
+                            </div>
+                        </div>
+                        <div class="company-card-status">
+                            <span class="status-pill pill-approved"><i class="fa-solid fa-circle-check"></i> APPROVED</span>
+                        </div>
+                    </div>
+
+                    <div class="company-card-body">
+                        <div class="card-metric-strip">
+                            <div class="metric-box">
+                                <span class="metric-label"><i class="fa-solid fa-store"></i> Franchises</span>
+                                <span class="metric-value">{{ company.franchiseCount || 0 }} Branch{{ company.franchiseCount === 1 ? '' : 'es' }}</span>
+                            </div>
+                            <div class="metric-box">
+                                <span class="metric-label"><i class="fa-solid fa-location-dot"></i> Main Franchise</span>
+                                <span class="metric-value text-truncate" title="{{ company.mainLocation }}">{{ company.mainLocation || 'Setup in progress' }}</span>
+                            </div>
+                        </div>
+                        <div class="company-contact-list">
+                            <div class="contact-item">
+                                <i class="fa-regular fa-user"></i>
+                                <span><strong>Manager:</strong> {{ company.contactPerson }}</span>
+                            </div>
+                            <div class="contact-item">
+                                <i class="fa-regular fa-envelope"></i>
+                                <span><strong>Email:</strong> {{ company.email }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="company-card-footer">
+                        <a class="btn btn-secondary btn-sm" href="admin-company.html?id={{company.id}}">
+                            <i class="fa-solid fa-arrow-up-right-from-square"></i> Company Details & Branches
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Modal for Rejection Reason -->
+<div class="modal" ng-if="showRejectModal">
+    <div class="modal-box" style="max-width:500px;">
+        <h2 style="color:var(--danger);"><i class="fa-solid fa-triangle-exclamation"></i> Reject Company Access</h2>
+        <p>You are rejecting the request for <strong>{{ targetCompany.companyName }}</strong>.</p>
+        <form ng-submit="confirmReject()">
+            <div class="form-group" style="margin:16px 0;">
+                <label>Reason for Rejection <span style="color:var(--danger);">*</span></label>
+                <textarea ng-model="rejectReason" required rows="4" placeholder="Enter the reason why access is being rejected..." style="width:100%;padding:10px;border-radius:6px;border:1px solid #cbd5e1;"></textarea>
+            </div>
+            <div class="modal-buttons">
+                <button type="button" class="btn cancel-btn" ng-click="showRejectModal=false">Cancel</button>
+                <button type="submit" class="btn btn-danger"><i class="fa-solid fa-ban"></i> Confirm Rejection</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="sidebar.js"></script>
+</body>
+</html>

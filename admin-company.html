@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="franchiseApp">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Company Profile & Network - FranchiseEdge Admin</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular-animate.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular-route.min.js"></script>
+    <script src="app-core.js"></script>
+</head>
+<body ng-controller="AdminCompanyDetailController">
+
+<div class="dashboard">
+    <!-- Admin Sidebar Navigation -->
+    <div class="sidebar" id="sidebar">
+        <div class="admin-sidebar-brand">
+            <div class="admin-brand-icon"><i class="fa-solid fa-shield-halved"></i></div>
+            <div>
+                <h2>FranchiseEdge</h2>
+                <span class="admin-badge-pill">PLATFORM ADMIN</span>
+            </div>
+        </div>
+        <nav class="admin-nav-menu">
+            <a href="admin-dashboard.html"><i class="fa-solid fa-chart-pie"></i> Dashboard</a>
+            <a href="admin-companies.html"><i class="fa-solid fa-list-check"></i> Company Requests</a>
+            <a href="admin-companies.html?status=APPROVED"><i class="fa-solid fa-circle-check"></i> Approved Companies</a>
+            <a href="admin-companies.html?status=REJECTED"><i class="fa-solid fa-circle-xmark"></i> Rejected Companies</a>
+            <a href="admin-companies.html?status=PENDING"><i class="fa-solid fa-clock"></i> Pending Companies</a>
+            <a href="admin-settings.html"><i class="fa-solid fa-gear"></i> General Settings</a>
+            <a href="javascript:void(0)" ng-click="logout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+        </nav>
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+        <div class="topbar">
+            <div>
+                <a href="admin-companies.html" class="btn btn-secondary btn-sm" style="margin-right:12px;">
+                    <i class="fa-solid fa-arrow-left"></i> Back to Companies
+                </a>
+                <h1 style="display:inline-block;vertical-align:middle;margin:0;">Company Profile & Network</h1>
+            </div>
+            <div class="topbar-right">
+                <span class="status-pill" ng-class="{'pill-pending': company.status==='PENDING', 'pill-approved': company.status==='APPROVED', 'pill-rejected': company.status==='REJECTED'}">
+                    <i class="fa-solid" ng-class="{'fa-clock': company.status==='PENDING', 'fa-check': company.status==='APPROVED', 'fa-ban': company.status==='REJECTED'}"></i>
+                    {{ company.status }}
+                </span>
+            </div>
+        </div>
+
+        <!-- Feedback Alert Messages -->
+        <div class="feedback-banner success" ng-if="actionSuccess">
+            <i class="fa-solid fa-circle-check"></i> {{ actionSuccess }}
+        </div>
+        <div class="feedback-banner error" ng-if="actionError">
+            <i class="fa-solid fa-circle-exclamation"></i> {{ actionError }}
+        </div>
+
+        <!-- Company Header Hero Card -->
+        <div class="company-detail-hero">
+            <div class="detail-logo-box">
+                <img ng-if="company.logoUrl" ng-src="{{company.logoUrl}}" alt="{{company.companyName}}" class="detail-logo-img">
+                <div ng-if="!company.logoUrl" class="detail-logo-placeholder">
+                    <span>[ {{ (company.companyName || 'C').charAt(0).toUpperCase() }} ]</span>
+                </div>
+            </div>
+            <div class="detail-hero-content">
+                <div class="hero-top-row">
+                    <h2>{{ company.companyName }}</h2>
+                    <span class="badge badge-brand" ng-if="company.brandName">
+                        <i class="fa-solid fa-tag"></i> {{ company.brandName }}
+                    </span>
+                </div>
+                <p class="company-description" ng-if="company.brand && company.brand.details">{{ company.brand.details }}</p>
+                <div class="hero-quick-meta">
+                    <span><i class="fa-regular fa-calendar"></i> Registered: {{ company.createdAt | date:'dd MMM yyyy' }}</span>
+                    <span><i class="fa-solid fa-store"></i> {{ company.franchiseCount || 0 }} Branch{{ company.franchiseCount === 1 ? '' : 'es' }} Created</span>
+                    <span ng-if="company.databaseIdentifier"><i class="fa-solid fa-database"></i> Tenant DB: <code>{{ company.databaseIdentifier }}</code></span>
+                </div>
+            </div>
+            <div class="detail-hero-actions" ng-if="company.status === 'PENDING'">
+                <button type="button" class="btn btn-approve" ng-click="approveCompany(company.id)">
+                    <i class="fa-solid fa-check"></i> Approve Company
+                </button>
+                <button type="button" class="btn btn-reject" ng-click="openRejectModal()">
+                    <i class="fa-solid fa-xmark"></i> Reject Request
+                </button>
+            </div>
+        </div>
+
+        <!-- 2 Column Details: Profile & Branding Info -->
+        <div class="split-layout" style="margin-top:25px;">
+            <!-- Column 1: Company Profile & Contact -->
+            <div class="card-panel">
+                <div class="panel-header">
+                    <h3 class="panel-title"><i class="fa-solid fa-building"></i> Company Information</h3>
+                </div>
+                <div class="info-kv-table">
+                    <div class="kv-row">
+                        <span class="kv-key">Company Name</span>
+                        <span class="kv-val"><strong>{{ company.companyName }}</strong></span>
+                    </div>
+                    <div class="kv-row">
+                        <span class="kv-key">Contact Person</span>
+                        <span class="kv-val">{{ company.contactPerson }}</span>
+                    </div>
+                    <div class="kv-row">
+                        <span class="kv-key">Corporate Email</span>
+                        <span class="kv-val">{{ company.email }}</span>
+                    </div>
+                    <div class="kv-row">
+                        <span class="kv-key">Phone Number</span>
+                        <span class="kv-val">{{ company.phone || 'Not provided' }}</span>
+                    </div>
+                    <div class="kv-row">
+                        <span class="kv-key">Registered Address</span>
+                        <span class="kv-val">{{ company.address || 'Not provided' }}</span>
+                    </div>
+                    <div class="kv-row" ng-if="company.rejectionReason">
+                        <span class="kv-key" style="color:var(--danger);">Rejection Reason</span>
+                        <span class="kv-val" style="color:var(--danger);font-weight:600;">{{ company.rejectionReason }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Column 2: Branding & Central Setup Info -->
+            <div class="card-panel">
+                <div class="panel-header">
+                    <h3 class="panel-title"><i class="fa-solid fa-palette"></i> Branding & Central Setup</h3>
+                </div>
+                <div class="info-kv-table">
+                    <div class="kv-row">
+                        <span class="kv-key">Brand Identity</span>
+                        <span class="kv-val"><strong>{{ company.brandName || 'Pending Setup' }}</strong></span>
+                    </div>
+                    <div class="kv-row">
+                        <span class="kv-key">Company Logo</span>
+                        <span class="kv-val">
+                            <span ng-if="company.logoUrl" style="color:var(--success);"><i class="fa-solid fa-circle-check"></i> Uploaded</span>
+                            <span ng-if="!company.logoUrl" style="color:var(--muted);"><i class="fa-regular fa-clock"></i> Placeholder [ {{ (company.companyName || 'C').charAt(0).toUpperCase() }} ]</span>
+                        </span>
+                    </div>
+                    <div class="kv-row">
+                        <span class="kv-key">Main Franchise (Central HQ)</span>
+                        <span class="kv-val">
+                            <strong ng-if="company.mainFranchise">{{ company.mainFranchise.name }} ({{ company.mainFranchise.city }})</strong>
+                            <span ng-if="!company.mainFranchise" style="color:var(--muted);">Awaiting Onboarding Step 3</span>
+                        </span>
+                    </div>
+                    <div class="kv-row">
+                        <span class="kv-key">Main Central Inventory</span>
+                        <span class="kv-val">
+                            <strong ng-if="company.warehouse">{{ company.warehouse.name }}</strong>
+                            <span ng-if="!company.warehouse" style="color:var(--muted);">Awaiting Onboarding Step 4</span>
+                        </span>
+                    </div>
+                    <div class="kv-row">
+                        <span class="kv-key">Setup Status</span>
+                        <span class="kv-val">
+                            <span class="badge" ng-class="{'badge-success': company.setupCompleted, 'badge-warning': !company.setupCompleted}">
+                                {{ company.setupCompleted ? 'Setup Completed (Ready)' : 'Setup In Progress (Step ' + (company.setupStep || 0) + ' of 5)' }}
+                            </span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Franchise Branches Created by This Company -->
+        <div class="card-panel" style="margin-top:25px;">
+            <div class="panel-header">
+                <h3 class="panel-title"><i class="fa-solid fa-store"></i> Franchise Branches Created ({{ company.franchises.length || 0 }})</h3>
+                <span class="admin-isolation-tag"><i class="fa-solid fa-lock"></i> Isolated to {{ company.companyName }}</span>
+            </div>
+
+            <table class="data-table" ng-if="company.franchises.length > 0">
+                <thead>
+                    <tr>
+                        <th>Branch Code</th>
+                        <th>Franchise Name</th>
+                        <th>Role / Type</th>
+                        <th>City / State</th>
+                        <th>Manager / Owner</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr ng-repeat="f in company.franchises">
+                        <td><strong class="sku-text">{{ f.franchise_code }}</strong></td>
+                        <td><strong>{{ f.name }}</strong></td>
+                        <td>
+                            <span class="badge badge-warning" ng-if="f.isHeadOffice"><i class="fa-solid fa-crown"></i> Main Franchise (Central HQ)</span>
+                            <span class="badge badge-info" ng-if="!f.isHeadOffice"><i class="fa-solid fa-store"></i> Branch Unit</span>
+                        </td>
+                        <td>{{ f.city }}<span ng-if="f.state">, {{ f.state }}</span></td>
+                        <td>{{ f.owner_name || 'N/A' }}</td>
+                        <td><span class="status-pill pill-approved">{{ f.status || 'ACTIVE' }}</span></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="empty-state-box" ng-if="!company.franchises || company.franchises.length === 0">
+                <i class="fa-solid fa-store-slash" style="font-size:2.5rem;color:var(--muted);"></i>
+                <h4>No franchise branches registered yet</h4>
+                <p>Once the company completes onboarding, branches created by this company will appear here.</p>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Modal for Rejection Reason -->
+<div class="modal" ng-if="showRejectModal">
+    <div class="modal-box" style="max-width:500px;">
+        <h2 style="color:var(--danger);"><i class="fa-solid fa-triangle-exclamation"></i> Reject Company Access</h2>
+        <p>Please enter the reason for rejecting <strong>{{ company.companyName }}</strong>:</p>
+        <form ng-submit="confirmReject()">
+            <div class="form-group" style="margin:16px 0;">
+                <label>Reason for Rejection <span style="color:var(--danger);">*</span></label>
+                <textarea ng-model="rejectReason" required rows="4" placeholder="e.g. Incomplete business verification details..." style="width:100%;padding:10px;border-radius:6px;border:1px solid #cbd5e1;"></textarea>
+            </div>
+            <div class="modal-buttons">
+                <button type="button" class="btn cancel-btn" ng-click="showRejectModal=false">Cancel</button>
+                <button type="submit" class="btn btn-danger"><i class="fa-solid fa-ban"></i> Confirm Rejection</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="sidebar.js"></script>
+</body>
+</html>

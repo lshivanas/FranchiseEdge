@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="franchiseApp">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete Company Setup - FranchiseEdge</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular-animate.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular-route.min.js"></script>
+    <script src="app-core.js"></script>
+</head>
+<body ng-controller="CompanySetupController">
+
+<div class="dashboard">
+    <div class="sidebar" id="sidebar">
+        <div class="company-sidebar-brand">
+            <div class="company-logo-slot">
+                <div class="company-logo-placeholder">
+                    <span>[ C ]</span>
+                </div>
+            </div>
+            <div class="company-brand-text">
+                <h2>FranchiseEdge</h2>
+                <small style="color:var(--muted);font-size:0.75rem;">Company Onboarding</small>
+            </div>
+        </div>
+        <nav class="company-nav-menu">
+            <a class="active" href="company-setup.html"><i class="fa-solid fa-list-check"></i> Complete Setup</a>
+            <a href="javascript:void(0)" ng-click="logout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+        </nav>
+    </div>
+
+    <main class="main-content">
+        <div class="topbar">
+            <div>
+                <h1 style="margin:0;">Company Onboarding & Branding Setup</h1>
+                <p style="margin:4px 0 0;color:var(--muted);font-size:0.85rem;">Step {{step}} of 5. Establish your brand identity, Main Franchise, and Central Inventory.</p>
+            </div>
+        </div>
+
+        <!-- 5-Step Visual Progress Bar -->
+        <div class="setup-steps-tracker" style="display:flex;justify-content:space-between;background:#fff;padding:20px;border-radius:12px;box-shadow:var(--shadow);margin-bottom:24px;">
+            <div class="tracker-step" ng-class="{'active': step===1, 'done': step > 1}">
+                <div class="tracker-circle">1</div>
+                <span>Company Details</span>
+            </div>
+            <div class="tracker-step" ng-class="{'active': step===2, 'done': step > 2}">
+                <div class="tracker-circle">2</div>
+                <span>Main Brand</span>
+            </div>
+            <div class="tracker-step" ng-class="{'active': step===3, 'done': step > 3}">
+                <div class="tracker-circle">3</div>
+                <span>Main Franchise</span>
+            </div>
+            <div class="tracker-step" ng-class="{'active': step===4, 'done': step > 4}">
+                <div class="tracker-circle">4</div>
+                <span>Central Inventory</span>
+            </div>
+            <div class="tracker-step" ng-class="{'active': step===5, 'done': step > 5}">
+                <div class="tracker-circle">5</div>
+                <span>Administrator</span>
+            </div>
+        </div>
+
+        <div class="feedback-banner success" ng-if="message"><i class="fa-solid fa-circle-check"></i> {{message}}</div>
+        <div class="feedback-banner error" ng-if="error"><i class="fa-solid fa-circle-exclamation"></i> {{error}}</div>
+
+        <div class="card-panel" style="max-width:800px;margin:auto;">
+            <form ng-submit="save()" ng-if="!loading">
+                <!-- Step 1: Company Profile & Logo -->
+                <div ng-if="step===1">
+                    <h2 style="margin-bottom:16px;color:var(--blue);"><i class="fa-solid fa-building"></i> 1. Company Profile & Logo</h2>
+                    <div class="form-grid">
+                        <div class="form-group full">
+                            <label>Company Legal Name <span style="color:var(--danger);">*</span></label>
+                            <input ng-model="data.company.companyName" placeholder="e.g. Apex Multi-Unit Enterprises Ltd" required>
+                        </div>
+                        <div class="form-group full">
+                            <label>Company Logo URL</label>
+                            <input type="url" ng-model="data.company.logoUrl" placeholder="https://example.com/logo.png">
+                            <small style="color:var(--muted);">If blank, a placeholder [ {{ (data.company.companyName || 'C').charAt(0).toUpperCase() }} ] will be used.</small>
+                        </div>
+                        <div class="form-group full" ng-if="data.company.logoUrl" style="display:flex;align-items:center;gap:15px;background:#f8fafc;padding:12px;border-radius:8px;">
+                            <span style="font-size:0.85rem;color:var(--muted);">Logo Preview:</span>
+                            <img ng-src="{{data.company.logoUrl}}" alt="Logo" style="height:48px;max-width:120px;object-fit:contain;border:1px solid #e2e8f0;border-radius:6px;padding:4px;background:#fff;">
+                        </div>
+                        <div class="form-group full">
+                            <label>Company Description</label>
+                            <textarea ng-model="data.company.description" rows="3" placeholder="Brief summary of business operations..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Contact Person <span style="color:var(--danger);">*</span></label>
+                            <input ng-model="data.company.contactPerson" placeholder="Full Name" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Corporate Email <span style="color:var(--danger);">*</span></label>
+                            <input type="email" ng-model="data.company.email" placeholder="corporate@company.com" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Mobile Number</label>
+                            <phone-input ng-model="data.company.phone" ph-error="setupPhoneError"></phone-input>
+                        </div>
+                        <div class="form-group">
+                            <label>Website</label>
+                            <input ng-model="data.company.website" placeholder="https://company.com">
+                        </div>
+                        <div class="form-group full">
+                            <label>Registered Address</label>
+                            <textarea ng-model="data.company.address" rows="2" placeholder="Registered office address..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2: Main Brand -->
+                <div ng-if="step===2">
+                    <h2 style="margin-bottom:16px;color:var(--blue);"><i class="fa-solid fa-palette"></i> 2. Brand Identity</h2>
+                    <div class="form-grid">
+                        <div class="form-group full">
+                            <label>Main Brand Name <span style="color:var(--danger);">*</span></label>
+                            <input ng-model="data.brand.name" placeholder="e.g. SwitchHub Pro or Apex Burgers" required>
+                        </div>
+                        <div class="form-group full">
+                            <label>Brand Logo URL</label>
+                            <input type="url" ng-model="data.brand.logoUrl" placeholder="https://example.com/brand-logo.png">
+                        </div>
+                        <div class="form-group full">
+                            <label>Brand Description & Identity</label>
+                            <textarea ng-model="data.brand.details" rows="3" placeholder="Brand story, customer proposition, guidelines..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 3: Main Franchise / Central HQ -->
+                <div ng-if="step===3">
+                    <h2 style="margin-bottom:16px;color:var(--blue);"><i class="fa-solid fa-crown"></i> 3. Main Franchise (Central Head Office)</h2>
+                    <p style="color:var(--muted);font-size:0.9rem;margin-bottom:16px;">This will be established as your central flagship franchise unit.</p>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Headquarters Franchise Code</label>
+                            <input ng-model="data.mainFranchise.franchiseCode" placeholder="HQ-001">
+                        </div>
+                        <div class="form-group">
+                            <label>Main Franchise Name <span style="color:var(--danger);">*</span></label>
+                            <input ng-model="data.mainFranchise.name" placeholder="e.g. Apex Central Flagship HQ" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Franchise General Manager <span style="color:var(--danger);">*</span></label>
+                            <input ng-model="data.mainFranchise.ownerName" placeholder="Manager Name" required>
+                        </div>
+                        <div class="form-group">
+                            <label>HQ Contact Mobile Number</label>
+                            <phone-input ng-model="data.mainFranchise.phone" ph-error="setupPhoneError"></phone-input>
+                        </div>
+                        <div class="form-group">
+                            <label>HQ Email Address</label>
+                            <input type="email" ng-model="data.mainFranchise.email" placeholder="hq@company.com">
+                        </div>
+                        <div class="form-group">
+                            <label>City</label>
+                            <input ng-model="data.mainFranchise.city" placeholder="e.g. Chennai">
+                        </div>
+                        <div class="form-group">
+                            <label>State</label>
+                            <input ng-model="data.mainFranchise.state" placeholder="e.g. Tamil Nadu">
+                        </div>
+                        <div class="form-group full">
+                            <label>Address</label>
+                            <textarea ng-model="data.mainFranchise.address" rows="2" placeholder="HQ premises address..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 4: Central Main Inventory -->
+                <div ng-if="step===4">
+                    <h2 style="margin-bottom:16px;color:var(--blue);"><i class="fa-solid fa-building-columns"></i> 4. Central Main Inventory Location</h2>
+                    <p style="color:var(--muted);font-size:0.9rem;margin-bottom:16px;">The central warehouse / stock hub that initially supplies all franchise branches.</p>
+                    <div class="form-grid">
+                        <div class="form-group full">
+                            <label>Warehouse / Main Inventory Name <span style="color:var(--danger);">*</span></label>
+                            <input ng-model="data.warehouse.name" placeholder="e.g. Chennai Central Distribution Warehouse" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Warehouse Supervisor <span style="color:var(--danger);">*</span></label>
+                            <input ng-model="data.warehouse.responsiblePerson" placeholder="Full Name" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Warehouse Mobile Number</label>
+                            <phone-input ng-model="data.warehouse.phone" ph-error="setupPhoneError"></phone-input>
+                        </div>
+                        <div class="form-group full">
+                            <label>Warehouse Email</label>
+                            <input type="email" ng-model="data.warehouse.email" placeholder="warehouse@company.com">
+                        </div>
+                        <div class="form-group full">
+                            <label>Physical Address</label>
+                            <textarea ng-model="data.warehouse.address" rows="2" placeholder="Warehouse facility address..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 5: Administrator Account -->
+                <div ng-if="step===5">
+                    <h2 style="margin-bottom:16px;color:var(--blue);"><i class="fa-solid fa-user-shield"></i> 5. Company Administrator Credentials</h2>
+                    <p style="color:var(--muted);font-size:0.9rem;margin-bottom:16px;">Final step to activate your FranchiseEdge workspace.</p>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Administrator Name <span style="color:var(--danger);">*</span></label>
+                            <input ng-model="data.admin.name" placeholder="Admin Name" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Administrator Email <span style="color:var(--danger);">*</span></label>
+                            <input type="email" ng-model="data.admin.email" placeholder="admin@company.com" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Admin Mobile Number</label>
+                            <phone-input ng-model="data.admin.phone" ph-error="setupPhoneError"></phone-input>
+                        </div>
+                        <div class="form-group">
+                            <label>Set Administrator Password <span style="color:var(--danger);">*</span></label>
+                            <input type="password" ng-model="data.admin.password" placeholder="Secure password (min 6 characters)">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="feedback-banner error" ng-if="error">
+                    <i class="fa-solid fa-circle-exclamation"></i> {{ error }}
+                </div>
+                <div style="margin-top:24px;display:flex;justify-content:space-between;align-items:center;">
+                    <button type="button" class="btn btn-secondary" ng-if="step > 1" ng-click="step = step - 1">
+                        <i class="fa-solid fa-arrow-left"></i> Previous Step
+                    </button>
+                    <div style="margin-left:auto;">
+                        <button class="btn btn-primary" type="submit">
+                            <i class="fa-solid" ng-class="{'fa-arrow-right': step < 5, 'fa-check': step === 5}"></i>
+                            {{step===5 ? 'Finish Onboarding & Enter Command Center' : 'Save & Continue'}}
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </main>
+</div>
+
+<script src="sidebar.js"></script>
+</body>
+</html>

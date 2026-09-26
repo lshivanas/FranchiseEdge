@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="franchiseApp">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In - FranchiseEdge</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular-animate.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular-route.min.js"></script>
+    <script src="app-core.js"></script>
+</head>
+<body class="auth-body" ng-controller="LoginController">
+
+    <div class="auth-left">
+        <div class="logo">FranchiseEdge</div>
+        <p style="font-size:0.75rem;letter-spacing:2px;text-transform:uppercase;margin-bottom:30px;">Enterprise Command Center</p>
+        <h1 style="font-size:2.5rem;line-height:1.2;margin-bottom:20px;">Scale your vision with surgical precision.</h1>
+        <p style="line-height:1.7;margin-bottom:30px;">Unified franchise management, real-time inventory synchronization, and executive performance intelligence across all your operating units.</p>
+        <div style="display:flex;gap:30px;font-size:0.9rem;">
+            <span><i class="fa-solid fa-shield-halved"></i> Enterprise Security</span>
+            <span><i class="fa-solid fa-bolt"></i> Real-time Syncing</span>
+        </div>
+    </div>
+
+    <div class="auth-right">
+        <div class="auth-card">
+            <h2>Welcome Back</h2>
+            <p>Enter your corporate credentials to access the command center.</p>
+
+            <div class="error-text" style="margin-bottom:15px;font-weight:600;" ng-if="loginError">{{ loginError }}</div>
+
+            <form ng-submit="login()" novalidate>
+                <div class="form-group">
+                    <label for="email">Corporate Email</label>
+                    <input type="email" id="email" ng-model="credentials.email" placeholder="name@company.com" required>
+                    <span class="error-text" ng-if="errors.email">{{ errors.email }}</span>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" ng-model="credentials.password" placeholder="Enter your password" required minlength="6">
+                    <span class="error-text" ng-if="errors.password">{{ errors.password }}</span>
+                </div>
+
+                <div style="display:flex;align-items:center;gap:10px;margin:20px 0;">
+                    <input type="checkbox" id="remember" ng-model="credentials.remember" style="width:auto;">
+                    <label for="remember" style="margin:0;font-weight:400;cursor:pointer;">Remember this device</label>
+                </div>
+
+                <button type="submit" class="btn full"><i class="fa-solid fa-right-to-bracket"></i> Sign In to Dashboard</button>
+            </form>
+
+            <div class="link-text">
+                New franchise operator? <a href="register.html">Request Access</a>
+            </div>
+            <div class="link-text" style="margin-top:10px;">
+                <a href="admin-login.html" style="color:var(--muted);">Admin sign in</a><br>
+                <a href="index.html" style="color:var(--muted);"><i class="fa-solid fa-arrow-left"></i> Back to Homepage</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="franchiseApp">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Request Access - FranchiseEdge</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular-animate.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular-route.min.js"></script>
+    <script src="app-core.js"></script>
+</head>
+<body class="auth-body" ng-controller="RegisterController">
+
+    <div class="auth-left">
+        <div class="logo">FranchiseEdge</div>
+        <p style="font-size:0.75rem;letter-spacing:2px;text-transform:uppercase;margin-bottom:30px;">Enterprise Command Center</p>
+        <h1 style="font-size:2.5rem;line-height:1.2;margin-bottom:20px;">Join the franchise network.</h1>
+        <p style="line-height:1.7;">Create your enterprise account to manage multi-unit franchise locations, central catalog inventory, and procurement workflows.</p>
+        <div style="display:flex;gap:30px;font-size:0.9rem;margin-top:30px;">
+            <span><i class="fa-solid fa-shield-halved"></i> Enterprise Security</span>
+            <span><i class="fa-solid fa-bolt"></i> Instant Provisioning</span>
+        </div>
+    </div>
+
+    <div class="auth-right">
+        <div class="auth-card">
+            <h2>Request Access</h2>
+            <p>Enter your details to create your enterprise account.</p>
+
+            <div class="error-text" style="margin-bottom:15px;font-weight:600;" ng-if="registerError">{{ registerError }}</div>
+
+            <form ng-submit="register()" novalidate>
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" ng-model="form.name" required placeholder="e.g. Rohan Sharma">
+                    <span class="error-text" ng-if="errors.name">{{ errors.name }}</span>
+                </div>
+                <div class="form-group">
+                    <label>Company / Franchise Brand</label>
+                    <input type="text" ng-model="form.company" required placeholder="e.g. Apex Enterprise">
+                    <span class="error-text" ng-if="errors.company">{{ errors.company }}</span>
+                </div>
+                <div class="form-group">
+                    <label>Corporate Email</label>
+                    <input type="email" ng-model="form.email" required placeholder="name@company.com">
+                    <span class="error-text" ng-if="errors.email">{{ errors.email }}</span>
+                </div>
+                <div class="form-group">
+                    <label>Mobile Number</label>
+                    <phone-input ng-model="form.phone" ph-error="errors.phone"></phone-input>
+                    <span class="error-text" ng-if="errors.phone">{{ errors.phone }}</span>
+                </div>
+                <div class="form-group">
+                    <label>Company Address</label>
+                    <input type="text" ng-model="form.address" placeholder="Business address">
+                </div>
+                <div class="form-group">
+                    <label>Password (min 6 characters)</label>
+                    <input type="password" ng-model="form.password" required minlength="6" placeholder="Create secure password">
+                    <span class="error-text" ng-if="errors.password">{{ errors.password }}</span>
+                </div>
+                <div class="form-group">
+                    <label>Confirm Password</label>
+                    <input type="password" ng-model="form.confirmPassword" required placeholder="Confirm your password">
+                    <span class="error-text" ng-if="errors.confirmPassword">{{ errors.confirmPassword }}</span>
+                </div>
+                <button type="submit" class="btn full"><i class="fa-solid fa-user-plus"></i> Create Account</button>
+            </form>
+
+            <div class="link-text">
+                Already have an account? <a href="login.html">Sign In</a>
+            </div>
+            <div class="link-text" style="margin-top:10px;">
+                <a href="index.html" style="color:var(--muted);"><i class="fa-solid fa-arrow-left"></i> Back to Homepage</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

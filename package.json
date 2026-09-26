@@ -1,0 +1,12 @@
+{
+  "name": "franchise-management",
+  "version": "1.0.0",
+  "description": "Franchise Management System using native Node.js HTTP, MongoDB, and AngularJS",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "node backend/server.js"
+  },
+  "dependencies": {
+    "mongodb": "^6.8.0"
+  }
+}

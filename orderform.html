@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="franchiseApp">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Order & Inventory Transfer - FranchiseEdge</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular-animate.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular-route.min.js"></script>
+    <script src="app-core.js"></script>
+</head>
+<body ng-controller="OrderFormController">
+
+<app-loading loading="isLoading"></app-loading>
+
+<div class="dashboard">
+    <!-- Company Sidebar Navigation (Clean: No Compliance, Smart Tips, or Analytics) -->
+    <div class="sidebar" id="sidebar">
+        <div class="company-sidebar-brand">
+            <div class="company-logo-slot">
+                <img ng-if="currentUser.logoUrl" ng-src="{{currentUser.logoUrl}}" alt="{{currentUser.company}}" class="company-logo-img">
+                <div ng-if="!currentUser.logoUrl" class="company-logo-placeholder">
+                    <span>[ {{ (currentUser.company || 'C').charAt(0).toUpperCase() }} ]</span>
+                </div>
+            </div>
+            <div class="company-brand-text">
+                <h2>{{ currentUser.company || 'FranchiseEdge' }}</h2>
+                <small style="color:var(--muted);font-size:0.75rem;">Company Portal</small>
+            </div>
+        </div>
+
+        <nav class="company-nav-menu">
+            <a href="dashboard.html"><i class="fa-solid fa-chart-pie"></i> Dashboard</a>
+            <a href="franchises.html"><i class="fa-solid fa-store"></i> Franchises</a>
+            <a href="inventory.html"><i class="fa-solid fa-boxes-stacked"></i> Inventory</a>
+            <a href="orders.html" class="active"><i class="fa-solid fa-cart-shopping"></i> Orders & Transfers</a>
+            <a href="settings.html"><i class="fa-solid fa-gear"></i> Settings</a>
+            <a href="javascript:void(0)" ng-click="logout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+        </nav>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="main-content">
+        <div class="topbar">
+            <div>
+                <button class="mobile-menu-toggle" id="menuToggle"><i class="fa-solid fa-bars"></i></button>
+                <h1 style="display:inline-block;vertical-align:middle;margin:0;">Order & Inventory Transfer Entry</h1>
+                <p style="margin:4px 0 0;color:var(--muted);font-size:0.85rem;">Transfer products from Central Main Inventory or perform Franchise-to-Franchise transfers.</p>
+            </div>
+            <div class="topbar-right">
+                <a href="orders.html" class="btn btn-secondary btn-sm"><i class="fa-solid fa-arrow-left"></i> View All Orders</a>
+            </div>
+        </div>
+
+        <!-- Transfer Flow Visual Indicator Card -->
+        <div class="transfer-routing-visual-card" ng-if="order.source_id && order.franchise_id">
+            <div class="route-node source-node">
+                <div class="node-icon">
+                    <i class="fa-solid" ng-class="{'fa-building-columns': selectedSourceIsMain, 'fa-store': !selectedSourceIsMain}"></i>
+                </div>
+                <div class="node-details">
+                    <span class="node-type-tag">SOURCE INVENTORY</span>
+                    <strong>{{ getSourceName(order.source_id) }}</strong>
+                    <small ng-if="selectedSourceIsMain" style="color:var(--medium-blue);font-weight:600;"><i class="fa-solid fa-crown"></i> Central Main Inventory</small>
+                    <small ng-if="!selectedSourceIsMain" style="color:var(--blue);font-weight:600;"><i class="fa-solid fa-right-left"></i> Franchise Branch Source</small>
+                </div>
+            </div>
+
+            <div class="route-arrow-connector">
+                <span class="route-transfer-type-badge" ng-class="{'badge-main': selectedSourceIsMain, 'badge-branch': !selectedSourceIsMain}">
+                    {{ selectedSourceIsMain ? 'Main Inventory ➔ Franchise' : 'Franchise ➔ Franchise Transfer' }}
+                </span>
+                <div class="arrow-line">
+                    <i class="fa-solid fa-arrow-right"></i>
+                </div>
+            </div>
+
+            <div class="route-node dest-node">
+                <div class="node-icon"><i class="fa-solid fa-store"></i></div>
+                <div class="node-details">
+                    <span class="node-type-tag">DESTINATION BRANCH</span>
+                    <strong>{{ getDestName(order.franchise_id) }}</strong>
+                    <small style="color:var(--success);font-weight:600;"><i class="fa-solid fa-location-dot"></i> Receiving Franchise Branch</small>
+                </div>
+            </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1.3fr 0.7fr;gap:25px;align-items:start;">
+            <!-- Order Form Card -->
+            <div class="card-panel">
+                <div class="panel-header">
+                    <h2 class="panel-title"><i class="fa-solid fa-arrows-split-up-and-left"></i> Transfer & Order Details</h2>
+                </div>
+
+                <form ng-submit="submitOrder()">
+                    <!-- Step 1: Destination Selection -->
+                    <div class="form-group" style="margin-bottom:18px;">
+                        <label>Destination Franchise Branch <span style="color:var(--danger);">*</span></label>
+                        <select ng-model="order.franchise_id" ng-change="onDestinationChange()" required style="font-weight:600;">
+                            <option value="">-- Select Receiving Franchise Branch --</option>
+                            <option ng-repeat="f in destinationOptions" value="{{ f.id }}">
+                                {{ f.name }} ({{ f.city }}) {{ f.isHeadOffice ? '[Main Franchise HQ]' : '' }}
+                            </option>
+                        </select>
+                        <small style="color:var(--muted);display:block;margin-top:4px;">The branch that will receive and increase its stock.</small>
+                    </div>
+
+                    <!-- Step 2: Add Products with Dynamic Source Stock Availability -->
+                    <div class="transfer-draft-box">
+                        <div class="draft-box-header">
+                            <h4><i class="fa-solid fa-plus-circle"></i> Select Product & Valid Source Location</h4>
+                        </div>
+
+                        <!-- Product Selection -->
+                        <div class="form-group">
+                            <label>Product Item <span style="color:var(--danger);">*</span></label>
+                            <select ng-model="draftItem.product" ng-change="onProductSelect()" style="font-weight:600;">
+                                <option value="">-- Choose Product Item --</option>
+                                <option ng-repeat="p in allProducts" ng-value="p">
+                                    {{ p.name }} ({{ p.product_code }}) — {{ p.price | currencyInr }}
+                                </option>
+                            </select>
+                        </div>
+
+                        <!-- Dynamic Source Selection based on product stock -->
+                        <div class="form-group" ng-if="draftItem.product">
+                            <label>Source Inventory Location <span style="color:var(--danger);">*</span></label>
+                            <select ng-model="order.source_id" ng-change="onSourceChange()" required style="font-weight:600;">
+                                <option value="">-- Select Valid Source Location --</option>
+                                <option ng-repeat="s in availableSources" value="{{ s.franchise_id }}" ng-disabled="s.isDisabled">
+                                    {{ s.sourceLabel }}
+                                </option>
+                            </select>
+                            
+                            <!-- Smart In-Stock Guidance Alert: If Main Inventory is 0 and Branch has stock -->
+                            <div class="source-guidance-notice" ng-if="mainInventoryOutOfStock && hasAlternateBranchStock">
+                                <i class="fa-solid fa-lightbulb"></i>
+                                <div>
+                                    <strong>Franchise-to-Franchise Transfer Available:</strong><br>
+                                    Main Inventory has 0 units of <em>{{ draftItem.product.name }}</em>. You can transfer stock directly from another franchise branch (e.g. <strong>{{ alternateBranchSuggestion }}</strong>) that has available units.
+                                </div>
+                            </div>
+
+                            <div class="source-guidance-notice error" ng-if="totalNetworkStock === 0">
+                                <i class="fa-solid fa-triangle-exclamation"></i>
+                                <div>
+                                    <strong>Network Out of Stock:</strong> No branch or main inventory currently has available stock for this item. Please use <strong>Stock In</strong> from the Inventory page first.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Quantity and Add Item Button -->
+                        <div class="form-grid" style="align-items:end;margin-top:12px;" ng-if="draftItem.product && order.source_id">
+                            <div class="form-group" style="margin:0;">
+                                <label>Transfer Quantity <span style="color:var(--muted);">(Max available: {{ currentSourceStock }})</span></label>
+                                <input type="number" min="1" max="{{ currentSourceStock }}" ng-model="draftItem.quantity" required>
+                            </div>
+                            <div class="form-group" style="margin:0;">
+                                <button type="button" class="btn btn-secondary" ng-click="addItem()" ng-disabled="!draftItem.product || !order.source_id || currentSourceStock <= 0" style="width:100%;">
+                                    <i class="fa-solid fa-cart-plus"></i> Add Item to Order
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Customer / Recipient Details -->
+                    <div class="form-grid" style="margin-top:18px;">
+                        <div class="form-group">
+                            <label>Transfer Reference / Contact Person</label>
+                            <input type="text" ng-model="order.customer_name" placeholder="e.g. Branch Replenishment Dispatch">
+                        </div>
+                        <div class="form-group">
+                            <label>Contact Mobile Number</label>
+                            <phone-input ng-model="order.customer_phone" ph-error="orderPhoneError"></phone-input>
+                            <span class="error-text" ng-if="orderPhoneError">{{ orderPhoneError }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Line Items Table -->
+                    <div style="margin:20px 0;">
+                        <h4 style="margin-bottom:10px;"><i class="fa-solid fa-list-check"></i> Transfer Items ({{ order.items.length }})</h4>
+                        <table class="data-table" style="font-size:0.88rem;" ng-if="order.items.length > 0">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>SKU</th>
+                                    <th>Source Location</th>
+                                    <th>Qty</th>
+                                    <th>Unit Price</th>
+                                    <th>Line Total</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-repeat="it in order.items">
+                                    <td><strong>{{ it.product_name }}</strong></td>
+                                    <td><span class="sku-text">{{ it.product_code }}</span></td>
+                                    <td><span class="badge badge-info">{{ it.source_name }}</span></td>
+                                    <td>
+                                        <input type="number" min="1" max="{{ it.maxAvailable }}" ng-model="it.quantity" ng-change="calculateTotals()" style="width:65px;padding:3px 6px;text-align:center;">
+                                    </td>
+                                    <td>{{ it.unit_price | currencyInr }}</td>
+                                    <td><strong>{{ (it.quantity * it.unit_price) | currencyInr }}</strong></td>
+                                    <td>
+                                        <button type="button" class="action-btn delete-btn" ng-click="removeItem($index)" title="Remove"><i class="fa-solid fa-trash"></i></button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <div ng-if="order.items.length === 0" class="empty-state-box" style="padding:20px;">
+                            <i class="fa-solid fa-cart-arrow-down" style="font-size:2rem;color:var(--muted);"></i>
+                            <p>No items added yet. Select Destination, Product, and Source above, then click "Add Item to Order".</p>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons: Cancel and Authorize Submit -->
+                    <div style="display:flex;gap:12px;margin-top:20px;">
+                        <a href="orders.html" class="btn cancel-btn" style="flex:1;text-align:center;padding:14px;font-size:1rem;text-decoration:none;">
+                            <i class="fa-solid fa-xmark"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn" style="flex:2;padding:14px;font-size:1rem;" ng-disabled="isSubmitting || order.items.length === 0 || !order.franchise_id || !order.source_id">
+                            <i class="fa-solid fa-paper-plane"></i>
+                            {{ isSubmitting ? 'Verifying & Executing Transfer...' : 'Authorize & Execute Inventory Transfer' }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Live Order Summary & Transaction Breakdown Card -->
+            <div class="card-panel">
+                <div class="panel-header">
+                    <h2 class="panel-title"><i class="fa-solid fa-receipt"></i> Transfer Summary</h2>
+                </div>
+
+                <div class="transfer-routing-summary">
+                    <div class="summary-route-row">
+                        <span class="route-dot source-dot"></span>
+                        <div class="route-text">
+                            <small>Source (Deducted)</small>
+                            <strong>{{ getSourceName(order.source_id) }}</strong>
+                        </div>
+                    </div>
+                    <div class="summary-route-divider"></div>
+                    <div class="summary-route-row">
+                        <span class="route-dot dest-dot"></span>
+                        <div class="route-text">
+                            <small>Destination (Credited)</small>
+                            <strong>{{ getDestName(order.franchise_id) }}</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="react-summary" style="margin-top:16px;">
+                    <p><span>Transfer Type</span><strong style="color:var(--blue);">{{ selectedSourceIsMain ? 'Main Inventory ➔ Franchise' : (order.source_id ? 'Franchise ➔ Franchise Transfer' : '—') }}</strong></p>
+                    <p><span>Total Items</span><strong>{{ order.items.length }} line item(s)</strong></p>
+                    <p><span>Subtotal Value</span><strong>{{ subtotal | currencyInr }}</strong></p>
+                    <p><span>GST / Tax (18%)</span><strong>{{ tax | currencyInr }}</strong></p>
+                    <p style="font-size:1.25rem;font-weight:bold;color:var(--success);border-top:2px solid #e2e8f0;padding-top:12px;margin-top:12px;">
+                        <span>Total Valuation</span><span>{{ total | currencyInr }}</span>
+                    </p>
+                </div>
+
+                <!-- Validation Guarantees Box -->
+                <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:14px;margin-top:20px;font-size:0.85rem;color:#166534;">
+                    <div style="font-weight:700;margin-bottom:6px;"><i class="fa-solid fa-shield-halved"></i> Transfer Integrity Rules:</div>
+                    <ul style="margin:0;padding-left:16px;line-height:1.5;">
+                        <li>Source location cannot equal Destination branch.</li>
+                        <li>Stock is verified atomically: deduction at source, immediate credit at destination.</li>
+                        <li>Transfers cannot exceed current source inventory stock.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="sidebar.js"></script>
+</body>
+</html>

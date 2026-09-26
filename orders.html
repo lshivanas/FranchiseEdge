@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="franchiseApp">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orders & Inventory Transfers - FranchiseEdge</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular-animate.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular-route.min.js"></script>
+    <script src="app-core.js"></script>
+</head>
+<body ng-controller="OrdersController">
+
+<app-loading loading="isLoading"></app-loading>
+
+<div class="dashboard">
+    <!-- Company Sidebar Navigation (Clean: No Compliance, Smart Tips, or Analytics) -->
+    <div class="sidebar" id="sidebar">
+        <div class="company-sidebar-brand">
+            <div class="company-logo-slot">
+                <img ng-if="currentUser.logoUrl" ng-src="{{currentUser.logoUrl}}" alt="{{currentUser.company}}" class="company-logo-img">
+                <div ng-if="!currentUser.logoUrl" class="company-logo-placeholder">
+                    <span>[ {{ (currentUser.company || 'C').charAt(0).toUpperCase() }} ]</span>
+                </div>
+            </div>
+            <div class="company-brand-text">
+                <h2>{{ currentUser.company || 'FranchiseEdge' }}</h2>
+                <small style="color:var(--muted);font-size:0.75rem;">Company Portal</small>
+            </div>
+        </div>
+
+        <nav class="company-nav-menu">
+            <a href="dashboard.html"><i class="fa-solid fa-chart-pie"></i> Dashboard</a>
+            <a href="franchises.html"><i class="fa-solid fa-store"></i> Franchises</a>
+            <a href="inventory.html"><i class="fa-solid fa-boxes-stacked"></i> Inventory</a>
+            <a href="orders.html" class="active"><i class="fa-solid fa-cart-shopping"></i> Orders & Transfers</a>
+            <a href="settings.html"><i class="fa-solid fa-gear"></i> Settings</a>
+            <a href="javascript:void(0)" ng-click="logout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+        </nav>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="main-content">
+        <div class="topbar">
+            <div>
+                <button class="mobile-menu-toggle" id="menuToggle"><i class="fa-solid fa-bars"></i></button>
+                <h1 style="display:inline-block;vertical-align:middle;margin:0;">Orders & Inventory Transfers</h1>
+                <p style="margin:4px 0 0;color:var(--muted);font-size:0.85rem;">Track replenishment orders and stock movements between Main Inventory and Franchise Branches.</p>
+            </div>
+            <div class="topbar-right">
+                <a href="orderform.html" class="btn btn-primary"><i class="fa-solid fa-plus"></i> New Transfer / Order</a>
+            </div>
+        </div>
+
+        <!-- KPI Summary Blocks -->
+        <div class="stats">
+            <div class="stat-card">
+                <h3>Total Transfers & Orders</h3>
+                <h2>{{ orders.length }}</h2>
+                <small style="color:var(--muted);"><i class="fa-solid fa-receipt"></i> Lifetime records</small>
+            </div>
+            <div class="stat-card">
+                <h3>Main ➔ Franchise Transfers</h3>
+                <h2 style="color:var(--blue);">{{ mainTransferCount }}</h2>
+                <small style="color:var(--blue);font-weight:600;"><i class="fa-solid fa-building-columns"></i> From Main Inventory</small>
+            </div>
+            <div class="stat-card">
+                <h3>Franchise ➔ Franchise</h3>
+                <h2 style="color:var(--medium-blue);">{{ franchiseTransferCount }}</h2>
+                <small style="color:var(--medium-blue);font-weight:600;"><i class="fa-solid fa-arrows-split-up-and-left"></i> Cross-branch transfers</small>
+            </div>
+            <div class="stat-card">
+                <h3>Total Transferred Value</h3>
+                <h2 style="color:var(--success);">{{ totalOrderValuation | currencyInr }}</h2>
+                <small style="color:var(--success);font-weight:600;"><i class="fa-solid fa-indian-rupee-sign"></i> Network stock movement</small>
+            </div>
+        </div>
+
+        <!-- Filter Controls & View Toggle Bar -->
+        <div class="admin-controls-card">
+            <div class="status-tab-pills">
+                <button type="button" class="tab-pill" ng-class="{'active': typeFilter === 'ALL'}" ng-click="setTypeFilter('ALL')">
+                    All Movements
+                </button>
+                <button type="button" class="tab-pill" ng-class="{'active': typeFilter === 'MAIN'}" ng-click="setTypeFilter('MAIN')">
+                    <i class="fa-solid fa-building-columns"></i> Main ➔ Franchise
+                </button>
+                <button type="button" class="tab-pill pill-pending" ng-class="{'active': typeFilter === 'BRANCH'}" ng-click="setTypeFilter('BRANCH')">
+                    <i class="fa-solid fa-right-left"></i> Franchise ➔ Franchise
+                </button>
+            </div>
+
+            <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+                <div class="admin-search-box">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" ng-model="searchText" placeholder="Search by order #, branch, customer...">
+                </div>
+
+                <select ng-model="statusFilter" style="padding:8px 12px;border-radius:6px;border:1px solid #cbd5e1;font-weight:600;font-size:0.85rem;">
+                    <option value="All">All Statuses</option>
+                    <option value="PENDING">Pending</option>
+                    <option value="PROCESSING">Processing</option>
+                    <option value="IN TRANSIT">In Transit</option>
+                    <option value="COMPLETED">Completed</option>
+                    <option value="DELIVERED">Delivered</option>
+                    <option value="CANCELLED">Cancelled</option>
+                </select>
+
+                <div class="view-toggle-group">
+                    <button type="button" class="view-toggle-btn" ng-class="{'active': viewMode === 'cards'}" ng-click="viewMode = 'cards'" title="Card View">
+                        <i class="fa-solid fa-grip"></i> Cards
+                    </button>
+                    <button type="button" class="view-toggle-btn" ng-class="{'active': viewMode === 'table'}" ng-click="viewMode = 'table'" title="Table View">
+                        <i class="fa-solid fa-list"></i> Table
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mode 1: Order / Transfer Cards View -->
+        <div class="order-cards-grid" ng-if="viewMode === 'cards'">
+            <div class="order-card-box" ng-repeat="ord in filteredOrders = (orders | filter:searchText | filter:(statusFilter === 'All' ? '' : {status: statusFilter}) | filter:filterByType)">
+                <div class="order-card-top">
+                    <div>
+                        <span class="order-id-label">{{ ord.order_number }}</span>
+                        <div class="order-date-text">{{ ord.order_date | date:'dd MMM yyyy, hh:mm a' }}</div>
+                    </div>
+                    <span class="status-pill" ng-class="{'pill-approved': ord.status==='COMPLETED'||ord.status==='DELIVERED', 'pill-pending': ord.status==='PENDING'||ord.status==='IN TRANSIT'||ord.status==='PROCESSING', 'pill-rejected': ord.status==='CANCELLED'}">
+                        {{ ord.status }}
+                    </span>
+                </div>
+
+                <!-- Clear Source & Destination Route Block -->
+                <div class="order-route-card">
+                    <div class="route-point">
+                        <span class="point-badge source-badge">SOURCE</span>
+                        <strong class="point-name">
+                            <i class="fa-solid" ng-class="{'fa-building-columns': ord.source_is_main, 'fa-store': !ord.source_is_main}"></i>
+                            {{ ord.source_name || 'Main Inventory' }}
+                        </strong>
+                    </div>
+                    <div class="route-connector-arrow">
+                        <i class="fa-solid fa-arrow-right-long"></i>
+                        <span class="transfer-tag" ng-class="{'tag-branch': ord.is_franchise_to_franchise}">
+                            {{ ord.is_franchise_to_franchise ? 'Branch Transfer' : 'Main Supply' }}
+                        </span>
+                    </div>
+                    <div class="route-point">
+                        <span class="point-badge dest-badge">DESTINATION</span>
+                        <strong class="point-name">
+                            <i class="fa-solid fa-location-dot"></i>
+                            {{ ord.destination_name || ord.franchise_name }}
+                        </strong>
+                    </div>
+                </div>
+
+                <!-- Order Item Summary & Pricing -->
+                <div class="order-card-meta">
+                    <div class="meta-row">
+                        <span><i class="fa-solid fa-boxes-stacked"></i> Items:</span>
+                        <strong>{{ ord.item_summary || (ord.total_items + ' item(s)') }}</strong>
+                    </div>
+                    <div class="meta-row" ng-if="ord.customer_name">
+                        <span><i class="fa-regular fa-user"></i> Contact:</span>
+                        <span>{{ ord.customer_name }}</span>
+                    </div>
+                    <div class="meta-row total-highlight">
+                        <span>Valuation:</span>
+                        <strong style="color:var(--success);font-size:1.1rem;">{{ ord.total | currencyInr }}</strong>
+                    </div>
+                </div>
+
+                <!-- Actions Footer -->
+                <div class="order-card-actions">
+                    <select ng-model="ord.status" ng-change="updateOrderStatus(ord, ord.status)" class="status-select-sm">
+                        <option value="PENDING">Pending</option>
+                        <option value="PROCESSING">Processing</option>
+                        <option value="IN TRANSIT">In Transit</option>
+                        <option value="COMPLETED">Completed</option>
+                        <option value="DELIVERED">Delivered</option>
+                        <option value="CANCELLED">Cancelled</option>
+                    </select>
+                    <div style="display:flex;gap:6px;">
+                        <button type="button" class="btn btn-secondary btn-sm" ng-click="viewOrderDetails(ord)">
+                            <i class="fa-solid fa-eye"></i> Details
+                        </button>
+                        <button type="button" class="action-btn delete-btn" ng-click="deleteOrder(ord)" title="Delete Record">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="empty-state-box full-width" ng-if="filteredOrders.length === 0">
+                <i class="fa-solid fa-boxes-packing" style="font-size:2.5rem;color:var(--muted);"></i>
+                <h3>No transfer orders found</h3>
+                <p>No records match your selected filter or search criteria.</p>
+            </div>
+        </div>
+
+        <!-- Mode 2: Enhanced Tabular View -->
+        <div class="table-container" ng-if="viewMode === 'table'">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Order / Transfer #</th>
+                        <th>Source Location</th>
+                        <th></th>
+                        <th>Destination Branch</th>
+                        <th>Transfer Type</th>
+                        <th>Items Summary</th>
+                        <th>Total Value</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr ng-repeat="ord in filteredOrders = (orders | filter:searchText | filter:(statusFilter === 'All' ? '' : {status: statusFilter}) | filter:filterByType)">
+                        <td><strong class="sku-text">{{ ord.order_number }}</strong><br><small style="color:var(--muted);">{{ ord.order_date | date:'dd/MM/yyyy' }}</small></td>
+                        <td>
+                            <strong>{{ ord.source_name || 'Main Inventory' }}</strong>
+                            <span class="badge badge-warning" ng-if="ord.source_is_main"><i class="fa-solid fa-crown"></i> HQ</span>
+                        </td>
+                        <td style="color:var(--muted);text-align:center;"><i class="fa-solid fa-arrow-right"></i></td>
+                        <td><strong>{{ ord.destination_name || ord.franchise_name }}</strong></td>
+                        <td>
+                            <span class="badge" ng-class="{'badge-info': !ord.is_franchise_to_franchise, 'badge-warning': ord.is_franchise_to_franchise}">
+                                {{ ord.is_franchise_to_franchise ? 'Franchise ➔ Franchise' : 'Main ➔ Franchise' }}
+                            </span>
+                        </td>
+                        <td><small>{{ ord.item_summary || (ord.total_items + ' items') }}</small></td>
+                        <td style="color:var(--success);font-weight:700;">{{ ord.total | currencyInr }}</td>
+                        <td>
+                            <select ng-model="ord.status" ng-change="updateOrderStatus(ord, ord.status)" class="status-select-sm">
+                                <option value="PENDING">Pending</option>
+                                <option value="PROCESSING">Processing</option>
+                                <option value="IN TRANSIT">In Transit</option>
+                                <option value="COMPLETED">Completed</option>
+                                <option value="DELIVERED">Delivered</option>
+                                <option value="CANCELLED">Cancelled</option>
+                            </select>
+                        </td>
+                        <td>
+                            <button class="action-btn view-btn" ng-click="viewOrderDetails(ord)" title="View Order Items"><i class="fa-solid fa-eye"></i></button>
+                            <button class="action-btn delete-btn" ng-click="deleteOrder(ord)" title="Delete Order"><i class="fa-solid fa-trash"></i></button>
+                        </td>
+                    </tr>
+                    <tr ng-if="filteredOrders.length === 0">
+                        <td colspan="9" style="text-align:center;padding:30px;">No transfer orders match the filter.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Order Detail Modal with Source & Destination Route Breakdown -->
+<div class="modal" ng-if="showDetailModal">
+    <div class="modal-box" style="max-width:700px;">
+        <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:15px;">
+            <div>
+                <h2 style="margin:0;">Transfer Record: {{ selectedOrder.order_number }}</h2>
+                <small style="color:var(--muted);">Date: {{ selectedOrder.order_date | date:'dd/MM/yyyy hh:mm a' }}</small>
+            </div>
+            <span class="status-pill pill-approved">{{ selectedOrder.status }}</span>
+        </div>
+
+        <!-- Visual Source & Destination Route Panel in Modal -->
+        <div class="transfer-routing-visual-card" style="margin-bottom:20px;padding:14px;">
+            <div class="route-node source-node">
+                <span class="node-type-tag">SOURCE LOCATION</span>
+                <strong>{{ selectedOrder.source_name || 'Main Inventory' }}</strong>
+            </div>
+            <div class="route-arrow-connector">
+                <span class="route-transfer-type-badge">{{ selectedOrder.transfer_type || 'STOCK TRANSFER' }}</span>
+                <div class="arrow-line"><i class="fa-solid fa-arrow-right"></i></div>
+            </div>
+            <div class="route-node dest-node">
+                <span class="node-type-tag">DESTINATION BRANCH</span>
+                <strong>{{ selectedOrder.destination_name || selectedOrder.franchise_name }}</strong>
+            </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:15px;font-size:0.9rem;">
+            <p><strong>Customer / Reference:</strong> {{ selectedOrder.customer_name || 'Enterprise Stock Transfer' }}</p>
+            <p><strong>Phone:</strong> {{ selectedOrder.customer_phone || 'N/A' }}</p>
+        </div>
+
+        <h3 style="color:var(--blue);margin-bottom:10px;"><i class="fa-solid fa-list-check"></i> Transferred Line Items</h3>
+        <table class="data-table" style="font-size:0.85rem;">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Code</th>
+                    <th>Qty</th>
+                    <th>Unit Price</th>
+                    <th>Line Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr ng-repeat="item in selectedOrder.items">
+                    <td><strong>{{ item.product_name }}</strong></td>
+                    <td><span class="sku-text">{{ item.product_code }}</span></td>
+                    <td><strong>{{ item.quantity }}</strong></td>
+                    <td>{{ item.unit_price | currencyInr }}</td>
+                    <td>{{ item.total_price | currencyInr }}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div style="text-align:right;margin-top:15px;font-size:0.95rem;line-height:1.6;">
+            <div>Subtotal: <strong>{{ selectedOrder.subtotal | currencyInr }}</strong></div>
+            <div>Tax (18% GST): <strong>{{ selectedOrder.tax | currencyInr }}</strong></div>
+            <div style="font-size:1.25rem;color:var(--success);font-weight:bold;margin-top:5px;">Grand Total: {{ selectedOrder.total | currencyInr }}</div>
+        </div>
+
+        <div class="modal-buttons">
+            <button type="button" class="btn cancel-btn" ng-click="closeDetailModal()">Close</button>
+        </div>
+    </div>
+</div>
+
+<script src="sidebar.js"></script>
+</body>
+</html>

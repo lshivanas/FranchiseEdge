@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="franchiseApp">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Company & Account Settings - FranchiseEdge</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular-animate.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular-route.min.js"></script>
+    <script src="app-core.js"></script>
+</head>
+<body ng-controller="SettingsController">
+
+<div class="dashboard">
+    <!-- Company Sidebar Navigation (Clean: No Compliance, Smart Tips, or Analytics) -->
+    <div class="sidebar" id="sidebar">
+        <div class="company-sidebar-brand">
+            <div class="company-logo-slot">
+                <img ng-if="currentUser.logoUrl || profile.avatarUrl" ng-src="{{profile.avatarUrl || currentUser.logoUrl}}" alt="{{currentUser.company}}" class="company-logo-img">
+                <div ng-if="!currentUser.logoUrl && !profile.avatarUrl" class="company-logo-placeholder">
+                    <span>[ {{ (currentUser.company || 'C').charAt(0).toUpperCase() }} ]</span>
+                </div>
+            </div>
+            <div class="company-brand-text">
+                <h2>{{ currentUser.company || 'FranchiseEdge' }}</h2>
+                <small style="color:var(--muted);font-size:0.75rem;">Company Portal</small>
+            </div>
+        </div>
+
+        <nav class="company-nav-menu">
+            <a href="dashboard.html"><i class="fa-solid fa-chart-pie"></i> Dashboard</a>
+            <a href="franchises.html"><i class="fa-solid fa-store"></i> Franchises</a>
+            <a href="inventory.html"><i class="fa-solid fa-boxes-stacked"></i> Inventory</a>
+            <a href="orders.html"><i class="fa-solid fa-cart-shopping"></i> Orders & Transfers</a>
+            <a href="settings.html" class="active"><i class="fa-solid fa-gear"></i> Settings</a>
+            <a href="javascript:void(0)" ng-click="logout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+        </nav>
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+        <div class="topbar">
+            <div>
+                <button class="mobile-menu-toggle" id="menuToggle"><i class="fa-solid fa-bars"></i></button>
+                <h1 style="display:inline-block;vertical-align:middle;margin:0;">Company & Account Settings</h1>
+                <p style="margin:4px 0 0;color:var(--muted);font-size:0.85rem;">Configure corporate branding, company logo, contact details, and security.</p>
+            </div>
+            <div class="topbar-right">
+                <div class="profile-card">
+                    <div class="profile-avatar" style="overflow:hidden;">
+                        <img ng-if="currentUser.logoUrl || profile.avatarUrl" ng-src="{{profile.avatarUrl || currentUser.logoUrl}}" alt="Logo" style="width:100%;height:100%;object-fit:cover;">
+                        <span ng-if="!currentUser.logoUrl && !profile.avatarUrl">{{ (currentUser.company || currentUser.name || 'C').charAt(0).toUpperCase() }}</span>
+                    </div>
+                    <div>
+                        <strong style="font-size:0.85rem;">{{ currentUser.name || profile.name }}</strong><br>
+                        <small style="color:var(--muted);font-size:0.75rem;">{{ currentUser.company }}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="feedback-banner success" ng-if="message">
+            <i class="fa-solid fa-circle-check"></i> {{ message }}
+        </div>
+        <div class="feedback-banner error" ng-if="error">
+            <i class="fa-solid fa-circle-exclamation"></i> {{ error }}
+        </div>
+
+        <div class="split-layout">
+            <!-- Left: Company Branding & Profile -->
+            <div class="card-panel">
+                <div class="panel-header">
+                    <h2 class="panel-title"><i class="fa-solid fa-palette"></i> Company Branding & Identity</h2>
+                </div>
+
+                <div class="settings-logo-preview-box" style="display:flex;align-items:center;gap:20px;padding:16px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;margin-bottom:20px;">
+                    <div class="company-logo-slot" style="width:72px;height:72px;">
+                        <img ng-if="profile.avatarUrl || currentUser.logoUrl" ng-src="{{profile.avatarUrl || currentUser.logoUrl}}" alt="Logo" class="company-logo-img" style="width:72px;height:72px;">
+                        <div ng-if="!profile.avatarUrl && !currentUser.logoUrl" class="company-logo-placeholder" style="width:72px;height:72px;font-size:1.3rem;">
+                            <span>[ {{ (currentUser.company || 'C').charAt(0).toUpperCase() }} ]</span>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 style="margin:0 0 4px;">{{ currentUser.company }}</h4>
+                        <p style="margin:0;font-size:0.85rem;color:var(--muted);">
+                            {{ (profile.avatarUrl || currentUser.logoUrl) ? 'Company logo is active across all company pages and admin company cards.' : 'Currently using placeholder avatar. Upload a corporate logo URL below.' }}
+                        </p>
+                    </div>
+                </div>
+
+                <form ng-submit="saveProfile()">
+                    <div class="form-group" style="margin-bottom:14px;">
+                        <label>Company Logo URL</label>
+                        <input type="url" ng-model="profile.avatarUrl" placeholder="https://example.com/logo.png" style="width:100%;padding:10px;border-radius:6px;border:1px solid #cbd5e1;">
+                        <small style="color:var(--muted);display:block;margin-top:4px;">Paste an image link (PNG, JPG, SVG) for your company logo.</small>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom:14px;">
+                        <label>Manager / Contact Person <span style="color:var(--danger);">*</span></label>
+                        <input type="text" ng-model="profile.name" required placeholder="Full Name" style="width:100%;padding:10px;border-radius:6px;border:1px solid #cbd5e1;">
+                    </div>
+
+                    <div class="form-group" style="margin-bottom:14px;">
+                        <label>Corporate Email <span style="color:var(--danger);">*</span></label>
+                        <input type="email" ng-model="profile.email" required placeholder="corporate@company.com" style="width:100%;padding:10px;border-radius:6px;border:1px solid #cbd5e1;">
+                    </div>
+
+                    <div class="form-group" style="margin-bottom:18px;">
+                        <label>Contact Mobile Number</label>
+                        <phone-input ng-model="profile.phone" ph-error="profilePhoneError"></phone-input>
+                        <span class="error-text" ng-if="profilePhoneError">{{ profilePhoneError }}</span>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Save Branding & Profile</button>
+                </form>
+            </div>
+
+            <!-- Right: Password & Security -->
+            <div class="card-panel">
+                <div class="panel-header">
+                    <h2 class="panel-title"><i class="fa-solid fa-lock"></i> Security & Authentication</h2>
+                </div>
+
+                <form ng-submit="changePassword()">
+                    <div class="form-group" style="margin-bottom:14px;">
+                        <label>Current Password <span style="color:var(--danger);">*</span></label>
+                        <input type="password" ng-model="password.currentPassword" required placeholder="Enter current password" style="width:100%;padding:10px;border-radius:6px;border:1px solid #cbd5e1;">
+                    </div>
+
+                    <div class="form-group" style="margin-bottom:14px;">
+                        <label>New Password <span style="color:var(--danger);">*</span></label>
+                        <input type="password" ng-model="password.newPassword" required minlength="6" placeholder="Enter new password (min 6 characters)" style="width:100%;padding:10px;border-radius:6px;border:1px solid #cbd5e1;">
+                    </div>
+
+                    <div class="form-group" style="margin-bottom:18px;">
+                        <label>Confirm New Password <span style="color:var(--danger);">*</span></label>
+                        <input type="password" ng-model="password.confirmPassword" required placeholder="Confirm new password" style="width:100%;padding:10px;border-radius:6px;border:1px solid #cbd5e1;">
+                    </div>
+
+                    <button type="submit" class="btn btn-secondary"><i class="fa-solid fa-key"></i> Update Password</button>
+                </form>
+
+                <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;margin-top:28px;font-size:0.85rem;color:var(--muted);">
+                    <div style="font-weight:700;color:var(--dark);margin-bottom:6px;"><i class="fa-solid fa-shield-halved"></i> Data Security Architecture:</div>
+                    <div>Your company data is isolated in a dedicated tenant database. Your orders, inventory stock, and branch transfers cannot be accessed by any other company on FranchiseEdge.</div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="sidebar.js"></script>
+</body>
+</html>
